@@ -142,6 +142,7 @@ class WebUI:
             assert request.method == "POST"
             print(request.form)
             print(dir(environment.runner))
+            
             if request.form.get("host"):
                 # Replace < > to guard against XSS
                 environment.host = str(request.form["host"]).replace("<", "").replace(">", "")

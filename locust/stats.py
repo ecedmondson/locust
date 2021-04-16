@@ -8,7 +8,7 @@ import csv
 
 import gevent
 
-from .exception import StopUser
+from .exception import StopUser, CatchResponseError
 
 import logging
 
@@ -93,7 +93,7 @@ def diff_response_time_dicts(latest, old):
     return new
 
 
-class RequestStats(object):
+class RequestStats:
     """
     Class that holds the request statistics.
     """
@@ -187,7 +187,7 @@ class RequestStats(object):
         return dict([(k, e.to_dict()) for k, e in self.errors.items()])
 
 
-class StatsEntry(object):
+class StatsEntry:
     """
     Represents a single stats entry (name and method)
     """
@@ -614,7 +614,7 @@ class StatsEntry(object):
                 self.response_times_cache.popitem(last=False)
 
 
-class StatsError(object):
+class StatsError:
     def __init__(self, method, name, error, occurrences=0):
         self.method = method
         self.name = name
@@ -644,7 +644,19 @@ class StatsError(object):
         self.occurrences += 1
 
     def to_name(self):
-        return "%s %s: %r" % (self.method, self.name, repr(self.error))
+        error = self.error
+        if isinstance(error, CatchResponseError):
+            # standalone
+            unwrapped_error = error.args[0]
+        if isinstance(error, str) and error.startswith("CatchResponseError("):
+            # distributed
+            length = len("CatchResponseError(")
+            unwrapped_error = error[length:-1]
+        else:
+            # standalone, unwrapped exception
+            unwrapped_error = repr(error)
+
+        return "%s %s: %s" % (self.method, self.name, unwrapped_error)
 
     def to_dict(self):
         return {
@@ -772,15 +784,16 @@ def stats_history(runner):
         stats = runner.stats
         if not stats.total.use_response_times_cache:
             break
-        r = {
-            "time": datetime.datetime.now().strftime("%H:%M:%S"),
-            "current_rps": stats.total.current_rps or 0,
-            "current_fail_per_sec": stats.total.current_fail_per_sec or 0,
-            "response_time_percentile_95": stats.total.get_current_response_time_percentile(0.95) or 0,
-            "response_time_percentile_50": stats.total.get_current_response_time_percentile(0.5) or 0,
-            "user_count": runner.user_count or 0,
-        }
-        stats.history.append(r)
+        if runner.state != "stopped":
+            r = {
+                "time": datetime.datetime.now().strftime("%H:%M:%S"),
+                "current_rps": stats.total.current_rps or 0,
+                "current_fail_per_sec": stats.total.current_fail_per_sec or 0,
+                "response_time_percentile_95": stats.total.get_current_response_time_percentile(0.95) or 0,
+                "response_time_percentile_50": stats.total.get_current_response_time_percentile(0.5) or 0,
+                "user_count": runner.user_count or 0,
+            }
+            stats.history.append(r)
         gevent.sleep(HISTORY_STATS_INTERVAL_SEC)
 
 
@@ -813,6 +826,13 @@ class StatsCSV:
             "Name",
             "Error",
             "Occurrences",
+        ]
+
+        self.exceptions_columns = [
+            "Count",
+            "Message",
+            "Traceback",
+            "Nodes",
         ]
 
     def _percentile_fields(self, stats_entry):
@@ -865,6 +885,14 @@ class StatsCSV:
                 ]
             )
 
+    def exceptions_csv(self, csv_writer):
+        csv_writer.writerow(self.exceptions_columns)
+        self._exceptions_data_rows(csv_writer)
+
+    def _exceptions_data_rows(self, csv_writer):
+        for exc in self.environment.runner.exceptions.values():
+            csv_writer.writerow([exc["count"], exc["msg"], exc["traceback"], ", ".join(exc["nodes"])])
+
 
 class StatsCSVFileWriter(StatsCSV):
     """Write statistics to to CSV files"""
@@ -883,6 +911,10 @@ class StatsCSVFileWriter(StatsCSV):
         self.failures_csv_filehandle = open(self.base_filepath + "_failures.csv", "w")
         self.failures_csv_writer = csv.writer(self.failures_csv_filehandle)
         self.failures_csv_data_start = 0
+
+        self.exceptions_csv_filehandle = open(self.base_filepath + "_exceptions.csv", "w")
+        self.exceptions_csv_writer = csv.writer(self.exceptions_csv_filehandle)
+        self.exceptions_csv_data_start = 0
 
         self.stats_history_csv_columns = [
             "Timestamp",
@@ -907,7 +939,7 @@ class StatsCSVFileWriter(StatsCSV):
     def stats_writer(self):
         """Writes all the csv files for the locust run."""
 
-        # Write header row for all files and save posistion for non-append files
+        # Write header row for all files and save position for non-append files
         self.requests_csv_writer.writerow(self.requests_csv_columns)
         requests_csv_data_start = self.requests_csv_filehandle.tell()
 
@@ -915,6 +947,9 @@ class StatsCSVFileWriter(StatsCSV):
 
         self.failures_csv_writer.writerow(self.failures_columns)
         self.failures_csv_data_start = self.failures_csv_filehandle.tell()
+
+        self.exceptions_csv_writer.writerow(self.exceptions_columns)
+        self.exceptions_csv_data_start = self.exceptions_csv_filehandle.tell()
 
         # Continuously write date rows for all files
         last_flush_time = 0
@@ -931,10 +966,15 @@ class StatsCSVFileWriter(StatsCSV):
             self._failures_data_rows(self.failures_csv_writer)
             self.failures_csv_filehandle.truncate()
 
+            self.exceptions_csv_filehandle.seek((self.exceptions_csv_data_start))
+            self._exceptions_data_rows(self.exceptions_csv_writer)
+            self.exceptions_csv_filehandle.truncate()
+
             if now - last_flush_time > CSV_STATS_FLUSH_INTERVAL_SEC:
                 self.requests_flush()
                 self.stats_history_flush()
                 self.failures_flush()
+                self.exceptions_flush()
                 last_flush_time = now
 
             gevent.sleep(CSV_STATS_INTERVAL_SEC)
@@ -987,10 +1027,14 @@ class StatsCSVFileWriter(StatsCSV):
     def failures_flush(self):
         self.failures_csv_filehandle.flush()
 
+    def exceptions_flush(self):
+        self.exceptions_csv_filehandle.flush()
+
     def close_files(self):
         self.requests_csv_filehandle.close()
         self.stats_history_csv_filehandle.close()
         self.failures_csv_filehandle.close()
+        self.exceptions_csv_filehandle.close()
 
     def stats_history_file_name(self):
         return self.base_filepath + "_stats_history.csv"

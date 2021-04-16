@@ -4,6 +4,7 @@ import random
 import socket
 import sys
 import traceback
+from typing import Type, List
 import warnings
 from uuid import uuid4
 from time import time
@@ -44,7 +45,7 @@ FALLBACK_INTERVAL = 5
 greenlet_exception_handler = greenlet_exception_logger(logger)
 
 
-class Runner(object):
+class Runner:
     """
     Orchestrates the load test by starting and stopping the users.
 
@@ -61,7 +62,6 @@ class Runner(object):
         self.greenlet = Group()
         self.state = STATE_INIT
         self.spawning_greenlet = None
-        self.stepload_greenlet = None
         self.shape_greenlet = None
         self.shape_last_state = None
         self.current_cpu_usage = 0
@@ -119,7 +119,9 @@ class Runner(object):
         """
         Updates the current state
         """
-        logger.debug("Updating state to '%s', old state was '%s'" % (new_state, self.state))
+        # I (cyberwiz) commented out this logging, because it is too noisy even for debug level
+        # Uncomment it if you are specifically debugging state transitions
+        # logger.debug("Updating state to '%s', old state was '%s'" % (new_state, self.state))
         self.state = new_state
 
     def cpu_log_warning(self):
@@ -131,7 +133,7 @@ class Runner(object):
             return True
         return False
 
-    def weight_users(self, amount):
+    def weight_users(self, amount) -> List[Type[User]]:
         """
         Distributes the amount of users for each WebLocust-class according to it's weight
         returns a list "bucket" with the weighted users
@@ -184,10 +186,10 @@ class Runner(object):
             while True:
                 if not bucket:
                     logger.info(
-                        "All users spawned: %s (%i already running)"
+                        "All users spawned: %s (%i total running)"
                         % (
                             ", ".join(["%s: %d" % (name, count) for name, count in occurrence_count.items()]),
-                            existing_count,
+                            len(self.user_greenlets),
                         )
                     )
                     self.environment.events.spawning_complete.fire(user_count=len(self.user_greenlets))
@@ -217,12 +219,18 @@ class Runner(object):
         bucket = self.weight_users(user_count)
         user_count = len(bucket)
         to_stop = []
-        for g in self.user_greenlets:
-            for l in bucket:
-                user = g.args[0]
-                if isinstance(user, l):
+        for user_greenlet in self.user_greenlets:
+            try:
+                user = user_greenlet.args[0]
+            except IndexError:
+                logger.error(
+                    "While stopping users, we encountered a user that didnt have proper args %s", user_greenlet
+                )
+                continue
+            for user_class in bucket:
+                if isinstance(user, user_class):
                     to_stop.append(user)
-                    bucket.remove(l)
+                    bucket.remove(user_class)
                     break
 
         if not to_stop:
@@ -263,7 +271,7 @@ class Runner(object):
             )
             stop_group.kill(block=True)
 
-        logger.info("%i Users have been stopped" % user_count)
+        logger.info("%i Users have been stopped, %g still running" % (user_count, len(self.user_greenlets)))
 
     def monitor_cpu(self):
         process = psutil.Process()
@@ -280,7 +288,7 @@ class Runner(object):
         """
         Start running a load test
 
-        :param user_count: Number of users to start
+        :param user_count: Total number of users to start
         :param spawn_rate: Number of users to spawn per second
         :param wait: If True calls to this method will block until all users are spawned.
                      If False (the default), a greenlet that spawns the users will be
@@ -312,37 +320,6 @@ class Runner(object):
             self.spawn_rate = spawn_rate
             self.spawn_users(user_count, spawn_rate=spawn_rate, wait=wait)
 
-    def start_stepload(self, user_count, spawn_rate, step_user_count, step_duration):
-        if user_count < step_user_count:
-            logger.error(
-                "Invalid parameters: total user count of %d is smaller than step user count of %d"
-                % (user_count, step_user_count)
-            )
-            return
-        self.total_users = user_count
-
-        if self.stepload_greenlet:
-            logger.info("There is an ongoing swarming in Step Load mode, will stop it now.")
-            self.stepload_greenlet.kill()
-        logger.info(
-            "Start a new swarming in Step Load mode: total user count of %d, spawn rate of %d, step user count of %d, step duration of %d "
-            % (user_count, spawn_rate, step_user_count, step_duration)
-        )
-        self.update_state(STATE_INIT)
-        self.stepload_greenlet = self.greenlet.spawn(self.stepload_worker, spawn_rate, step_user_count, step_duration)
-        self.stepload_greenlet.link_exception(greenlet_exception_handler)
-
-    def stepload_worker(self, spawn_rate, step_users_growth, step_duration):
-        current_num_users = 0
-        while self.state == STATE_INIT or self.state == STATE_SPAWNING or self.state == STATE_RUNNING:
-            current_num_users += step_users_growth
-            if current_num_users > int(self.total_users):
-                logger.info("Step Load is finished")
-                break
-            self.start(current_num_users, spawn_rate)
-            logger.info("Step loading: start spawn job of %d user" % (current_num_users))
-            gevent.sleep(step_duration)
-
     def start_shape(self):
         if self.shape_greenlet:
             logger.info("There is an ongoing shape test running. Editing is disabled")
@@ -360,7 +337,10 @@ class Runner(object):
             new_state = self.environment.shape_class.tick()
             if new_state is None:
                 logger.info("Shape test stopping")
-                self.stop()
+                if self.environment.parsed_options and self.environment.parsed_options.headless:
+                    self.quit()
+                else:
+                    self.stop()
             elif self.shape_last_state == new_state:
                 gevent.sleep(1)
             else:
@@ -447,7 +427,7 @@ class DistributedRunner(Runner):
         setup_distributed_stats_event_listeners(self.environment.events, self.stats)
 
 
-class WorkerNode(object):
+class WorkerNode:
     def __init__(self, id, state=STATE_INIT, heartbeat_liveness=HEARTBEAT_LIVENESS):
         self.id = id
         self.state = state
@@ -507,7 +487,9 @@ class MasterRunner(DistributedRunner):
             self.server = rpc.Server(master_bind_host, master_bind_port)
         except RPCError as e:
             if e.args[0] == "Socket bind failure: Address already in use":
-                port_string = master_bind_host + ":" + master_bind_port if master_bind_host != "*" else master_bind_port
+                port_string = (
+                    master_bind_host + ":" + str(master_bind_port) if master_bind_host != "*" else str(master_bind_port)
+                )
                 logger.error(
                     f"The Locust master port ({port_string}) was busy. Close any applications using that port - perhaps an old instance of Locust master is still running? ({e.args[0]})"
                 )
@@ -574,6 +556,8 @@ class MasterRunner(DistributedRunner):
             self.stats.clear_all()
             self.exceptions = {}
             self.environment.events.test_start.fire(environment=self.environment)
+            if self.environment.shape_class:
+                self.environment.shape_class.reset_time()
 
         for client in self.clients.ready + self.clients.running + self.clients.spawning:
             data = {
@@ -607,11 +591,8 @@ class MasterRunner(DistributedRunner):
             self.environment.events.test_stop.fire(environment=self.environment)
 
     def quit(self):
-        if self.state not in [STATE_INIT, STATE_STOPPED, STATE_STOPPING]:
-            logger.debug("Quitting...")
-            # fire test_stop event if state isn't already stopped
-            self.environment.events.test_stop.fire(environment=self.environment)
-
+        self.stop()
+        logger.debug("Quitting...")
         for client in self.clients.all:
             logger.debug("Sending quit message to client %s" % (client.id))
             self.server.send_to_client(Message("quit", None, client.id))
@@ -638,7 +619,7 @@ class MasterRunner(DistributedRunner):
                     logger.info("Worker %s failed to send heartbeat, setting state to missing." % str(client.id))
                     client.state = STATE_MISSING
                     client.user_count = 0
-                    if self.worker_count - len(self.clients.missing) <= 0:
+                    if self.worker_count <= 0:
                         logger.info("The last worker went missing, stopping test.")
                         self.stop()
                         self.check_stopped()
@@ -684,7 +665,15 @@ class MasterRunner(DistributedRunner):
                 if msg.node_id in self.clients:
                     c = self.clients[msg.node_id]
                     c.heartbeat = HEARTBEAT_LIVENESS
-                    c.state = msg.data["state"]
+                    client_state = msg.data["state"]
+                    if c.state == STATE_MISSING:
+                        logger.info(
+                            "Worker %s self-healed with heartbeat, setting state to %s." % (str(c.id), client_state)
+                        )
+                        user_count = msg.data.get("count")
+                        if user_count:
+                            c.user_count = user_count
+                    c.state = client_state
                     c.cpu_usage = msg.data["current_cpu_usage"]
                     if not c.cpu_warning_emitted and c.cpu_usage > 90:
                         self.worker_cpu_warning_emitted = True  # used to fail the test in the end
@@ -781,7 +770,11 @@ class WorkerRunner(DistributedRunner):
                 self.client.send(
                     Message(
                         "heartbeat",
-                        {"state": self.worker_state, "current_cpu_usage": self.current_cpu_usage},
+                        {
+                            "state": self.worker_state,
+                            "current_cpu_usage": self.current_cpu_usage,
+                            "count": self.user_count,
+                        },
                         self.client_id,
                     )
                 )

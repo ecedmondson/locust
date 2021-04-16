@@ -43,9 +43,6 @@ class Environment:
     reset_stats = False
     """Determines if stats should be reset once all simulated users have been spawned"""
 
-    step_load = False
-    """Determines if we're running in step load mode"""
-
     stop_timeout = None
     """
     If set, the runner will try to stop the running users gracefully and wait this many seconds
@@ -76,7 +73,6 @@ class Environment:
         events=None,
         host=None,
         reset_stats=False,
-        step_load=False,
         stop_timeout=None,
         catch_exceptions=True,
         parsed_options=None,
@@ -93,7 +89,6 @@ class Environment:
         self.stats = RequestStats()
         self.host = host
         self.reset_stats = reset_stats
-        self.step_load = step_load
         self.stop_timeout = stop_timeout
         self.catch_exceptions = catch_exceptions
         self.parsed_options = parsed_options
@@ -104,6 +99,11 @@ class Environment:
         if self.runner is not None:
             raise RunnerAlreadyExistsError("Environment.runner already exists (%s)" % self.runner)
         self.runner = runner_class(self, *args, **kwargs)
+
+        # Attach the runner to the shape class so that the shape class can access user count state
+        if self.shape_class:
+            self.shape_class.runner = self.runner
+
         return self.runner
 
     def create_local_runner(self):
@@ -143,7 +143,14 @@ class Environment:
         )
 
     def create_web_ui(
-        self, host="", port=8089, auth_credentials=None, tls_cert=None, tls_key=None, stats_csv_writer=None
+        self,
+        host="",
+        port=8089,
+        auth_credentials=None,
+        tls_cert=None,
+        tls_key=None,
+        stats_csv_writer=None,
+        delayed_start=False,
     ):
         """
         Creates a :class:`WebUI <locust.web.WebUI>` instance for this Environment and start running the web server
@@ -157,6 +164,8 @@ class Environment:
         :param tls_key: An optional path (str) to a TLS private key. If this is provided the web UI will be
                         served over HTTPS
         :param stats_csv_writer: `StatsCSV <stats_csv.StatsCSV>` instance.
+        :param delayed_start: Whether or not to delay starting web UI until `start()` is called. Delaying web UI start
+                              allows for adding Flask routes or Blueprints before accepting requests, avoiding errors.
         """
         self.web_ui = WebUI(
             self,
@@ -166,6 +175,7 @@ class Environment:
             tls_cert=tls_cert,
             tls_key=tls_key,
             stats_csv_writer=stats_csv_writer,
+            delayed_start=delayed_start,
         )
         return self.web_ui
 

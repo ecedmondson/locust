@@ -43,9 +43,16 @@ class TestTaskSet(LocustTestCase):
             tasks = [MyTasks]
 
         l = MyTasks(MyUser(self.environment))
-        self.assertRaisesRegex(Exception, "No tasks defined.*", l.run)
+        self.assertRaisesRegex(Exception, "No tasks defined on MyTasks.*", l.run)
         l.tasks = []
-        self.assertRaisesRegex(Exception, "No tasks defined.*", l.run)
+        self.assertRaisesRegex(Exception, "No tasks defined on MyTasks.*", l.run)
+
+    def test_tasks_missing_from_user_gives_user_friendly_exception(self):
+        class MyUser(User):
+            wait_time = constant(0.5)
+
+        l = MyUser(self.environment)
+        self.assertRaisesRegex(Exception, "No tasks defined on MyUser.*", l.run)
 
     def test_task_decorator_ratio(self):
         t1 = lambda l: None
@@ -131,8 +138,6 @@ class TestTaskSet(LocustTestCase):
         state = [0]
 
         class MyUser(User):
-            wait_time = constant(0)
-
             @task
             def t1(self):
                 pass
@@ -420,7 +425,6 @@ class TestTaskSet(LocustTestCase):
                 raise StopUser()
 
         class MyUser(User):
-            wait_time = constant(0)
             host = ""
             tasks = [MyTaskSet]
 
@@ -510,7 +514,6 @@ class TestLocustClass(LocustTestCase):
 
     def test_locust_graceful_stop(self):
         class TestUser(User):
-            wait_time = constant(0)
             test_state = 0
 
             @task
@@ -538,7 +541,6 @@ class TestLocustClass(LocustTestCase):
 
     def test_locust_forced_stop(self):
         class TestUser(User):
-            wait_time = constant(0)
             test_state = 0
 
             @task

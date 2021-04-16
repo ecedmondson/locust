@@ -141,7 +141,7 @@ def setup_parser_arguments(parser):
         "--users",
         type=int,
         dest="num_users",
-        help="Number of concurrent Locust users. Primarily used together with --headless",
+        help="Number of concurrent Locust users. Primarily used together with --headless. Can be changed during a test by inputs w, W(spawn 1, 10 users) and s, S(stop 1, 10 users)",
         env_var="LOCUST_USERS",
     )
     parser.add_argument(
@@ -161,7 +161,7 @@ def setup_parser_arguments(parser):
     parser.add_argument(
         "-t",
         "--run-time",
-        help="Stop after the specified amount of time, e.g. (300s, 20m, 3h, 1h30m, etc.). Only used together with --headless",
+        help="Stop after the specified amount of time, e.g. (300s, 20m, 3h, 1h30m, etc.). Only used together with --headless. Defaults to run forever.",
         env_var="LOCUST_RUN_TIME",
     )
     parser.add_argument(
@@ -192,6 +192,13 @@ def setup_parser_arguments(parser):
         action="store_true",
         help="Disable the web interface, and instead start the load test immediately. Requires -u and -t to be specified.",
         env_var="LOCUST_HEADLESS",
+    )
+    # Override --headless parameter (useful because you cant disable a store_true-parameter like headless once it has been set in a config file)
+    web_ui_group.add_argument(
+        "--headful",
+        action="store_true",
+        help=configargparse.SUPPRESS,
+        env_var="LOCUST_HEADFUL",
     )
     web_ui_group.add_argument(
         "--web-auth",
@@ -343,6 +350,12 @@ def setup_parser_arguments(parser):
         help="Reset statistics once spawning has been completed. Should be set on both master and workers when running in distributed mode",
         env_var="LOCUST_RESET_STATS",
     )
+    stats_group.add_argument(
+        "--html",
+        dest="html_file",
+        help="Store HTML report file",
+        env_var="LOCUST_HTML",
+    )
 
     log_group = parser.add_argument_group("Logging options")
     log_group.add_argument(
@@ -367,24 +380,10 @@ def setup_parser_arguments(parser):
     )
 
     step_load_group = parser.add_argument_group("Step load options")
-    step_load_group.add_argument(
-        "--step-load",
-        action="store_true",
-        help="Enable Step Load mode to monitor how performance metrics varies when user load increases. Requires --step-users and --step-time to be specified.",
-        env_var="LOCUST_STEP_LOAD",
-    )
-    step_load_group.add_argument(
-        "--step-users",
-        type=int,
-        help="User count to increase by step in Step Load mode. Only used together with --step-load",
-        env_var="LOCUST_STEP_USERS",
-    )
+    step_load_group.add_argument("--step-load", action="store_true", help=configargparse.SUPPRESS)
+    step_load_group.add_argument("--step-users", type=int, help=configargparse.SUPPRESS)
     step_load_group.add_argument("--step-clients", action="store_true", help=configargparse.SUPPRESS)
-    step_load_group.add_argument(
-        "--step-time",
-        help="Step duration in Step Load mode, e.g. (300s, 20m, 3h, 1h30m, etc.). Only used together with --step-load",
-        env_var="LOCUST_STEP_TIME",
-    )
+    step_load_group.add_argument("--step-time", help=configargparse.SUPPRESS)
 
     other_group = parser.add_argument_group("Other options")
     other_group.add_argument(

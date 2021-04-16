@@ -6,7 +6,7 @@ class QuickstartUser(HttpUser):
     wait_time = between(1, 2)
 
     @task
-    def index_page(self):
+    def hello_world(self):
         self.client.get("/hello")
         self.client.get("/world")
 

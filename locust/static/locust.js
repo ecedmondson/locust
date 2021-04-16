@@ -1,3 +1,6 @@
+var newTestLink = $("#new-test");
+var editTestLink = $("#edit-test");
+
 $(window).ready(function() {
     if($("#user_count").length > 0) {
         $("#user_count").focus().select();
@@ -6,8 +9,8 @@ $(window).ready(function() {
 
 function appearStopped() {
     $(".box_stop").hide();
-    $("a.new_test").show();
-    $("a.edit_test").hide();
+    newTestLink.show();
+    editTestLink.hide();
     $(".user_count").hide();
 }
 
@@ -23,13 +26,13 @@ $("#box_stop a.reset-button").click(function(event) {
     $.get($(this).attr("href"));
 });
 
-$("#new_test").click(function(event) {
+newTestLink.click(function(event) {
     event.preventDefault();
     $("#start").show();
     $("#user_count").focus().select();
 });
 
-$(".edit_test").click(function(event) {
+editTestLink.click(function(event) {
     event.preventDefault();
     $("#edit").show();
     $("#new_user_count").focus().select();
@@ -66,12 +69,12 @@ function setHostName(hostname) {
 $('#swarm_form').submit(function(event) {
     event.preventDefault();
     $("body").attr("class", "spawning");
-    $("#start").fadeOut();
-    $("#status").fadeIn();
-    $(".box_running").fadeIn();
-    $("a.new_test").fadeOut();
-    $("a.edit_test").fadeIn();
-    $(".user_count").fadeIn();
+    $("#start").hide();
+    $("#main").show();
+    $(".box_running").show();
+    newTestLink.hide();
+    editTestLink.show();
+    $(".user_count").show();
     $.post($(this).attr("action"), $(this).serialize(),
         function(response) {
             if (response.success) {
@@ -112,10 +115,12 @@ var sortBy = function(field, reverse, primer){
 // Sorting by column
 var alternate = false; //used by jqote2.min.js
 var sortAttribute = "name";
-var WorkerSortAttribute = "id";
+var workerSortAttribute = "id";
 var desc = false;
-var WorkerDesc = false;
+var workerDesc = false;
 var report;
+var failuresSortAttribute = "name";
+var failuresDesc = false;
 
 function renderTable(report) {
     var totalRow = report.stats.pop();
@@ -129,7 +134,7 @@ function renderTable(report) {
     $('#stats tbody').jqoteapp(stats_tpl, sortedStats);
 
     window.alternate = false;
-    $('#errors tbody').jqoteapp(errors_tpl, (report.errors).sort(sortBy(sortAttribute, desc)));
+    $('#errors tbody').jqoteapp(errors_tpl, (report.errors).sort(sortBy(failuresSortAttribute, failuresDesc)));
 
     $("#total_rps").html(Math.round(report.total_rps*100)/100);
     $("#fail_ratio").html(Math.round(report.fail_ratio*100));
@@ -139,7 +144,7 @@ function renderTable(report) {
 
 function renderWorkerTable(report) {
     if (report.workers) {
-        var workers = (report.workers).sort(sortBy(WorkerSortAttribute, WorkerDesc));
+        var workers = (report.workers).sort(sortBy(workerSortAttribute, workerDesc));
         $("#workers tbody").empty();
         window.alternate = false;
         $("#workers tbody").jqoteapp(workers_tpl, workers);
@@ -155,37 +160,81 @@ $("#stats .stats_label").click(function(event) {
     renderTable(window.report);
 });
 
+$("#errors .stats_label").click(function(event) {
+    event.preventDefault();
+    failuresSortAttribute = $(this).attr("data-sortkey");
+    failuresDesc = !failuresDesc;
+    renderTable(window.report);
+});
+
 $("#workers .stats_label").click(function(event) {
     event.preventDefault();
-    WorkerSortAttribute = $(this).attr("data-sortkey");
-    WorkerDesc = !WorkerDesc;
+    workerSortAttribute = $(this).attr("data-sortkey");
+    workerDesc = !workerDesc;
     renderWorkerTable(window.report);
 });
+
+function update_stats_charts(){
+    if(stats_history["time"].length > 0){
+        rpsChart.chart.setOption({
+            xAxis: {data: stats_history["time"]},
+            series: [
+                {data: stats_history["current_rps"]},
+                {data: stats_history["current_fail_per_sec"]},
+            ]
+        });
+
+        responseTimeChart.chart.setOption({
+            xAxis: {data: stats_history["time"]},
+            series: [
+                {data: stats_history["response_time_percentile_50"]},
+                {data: stats_history["response_time_percentile_95"]},
+            ]
+        });
+
+        usersChart.chart.setOption({
+            xAxis: {
+                data: stats_history["time"]
+            },
+            series: [
+                {data: stats_history["user_count"]},
+            ]
+        });
+    }
+}
 
 // init charts
 var rpsChart = new LocustLineChart($(".charts-container"), "Total Requests per Second", ["RPS", "Failures/s"], "reqs/s", ['#00ca5a', '#ff6d6d']);
 var responseTimeChart = new LocustLineChart($(".charts-container"), "Response Times (ms)", ["Median Response Time", "95% percentile"], "ms");
 var usersChart = new LocustLineChart($(".charts-container"), "Number of Users", ["Users"], "users");
-charts.push(rpsChart, responseTimeChart, usersChart)
+charts.push(rpsChart, responseTimeChart, usersChart);
+update_stats_charts()
 
 function updateStats() {
     $.get('./stats/requests', function (report) {
         window.report = report;
+        try{
+            renderTable(report);
+            renderWorkerTable(report);
 
-        renderTable(report);
-        renderWorkerTable(report);
-
-        if (report.state !== "stopped"){
-            // get total stats row
-            var total = report.stats[report.stats.length-1];
-            // update charts
-            rpsChart.addValue([total.current_rps, total.current_fail_per_sec]);
-            responseTimeChart.addValue([report.current_response_time_percentile_50, report.current_response_time_percentile_95]);
-            usersChart.addValue([report.user_count]);
-        } else {
-            appearStopped();
+            if (report.state !== "stopped"){
+                // get total stats row
+                var total = report.stats[report.stats.length-1];
+                // update charts
+                stats_history["time"].push(new Date().toLocaleTimeString());
+                stats_history["user_count"].push({"value": report.user_count});
+                stats_history["current_rps"].push({"value": total.current_rps, "users": report.user_count});
+                stats_history["current_fail_per_sec"].push({"value": total.current_fail_per_sec, "users": report.user_count});
+                stats_history["response_time_percentile_50"].push({"value": report.current_response_time_percentile_50, "users": report.user_count});
+                stats_history["response_time_percentile_95"].push({"value": report.current_response_time_percentile_95, "users": report.user_count});
+                update_stats_charts()
+            } else {
+                appearStopped();
+            }
+        } catch(i){
+            console.debug(i);
         }
-
+    }).always(function() {
         setTimeout(updateStats, 2000);
     });
 }

@@ -7,7 +7,7 @@ from gevent.queue import Queue
 import greenlet
 
 import locust
-from locust import runners, between, constant, LoadTestShape
+from locust import runners, constant, LoadTestShape
 from locust.main import create_environment
 from locust.user import User, TaskSet, task
 from locust.env import Environment
@@ -22,6 +22,7 @@ from locust.runners import (
     STATE_SPAWNING,
     STATE_RUNNING,
     STATE_MISSING,
+    STATE_STOPPING,
     STATE_STOPPED,
 )
 from locust.stats import RequestStats
@@ -32,7 +33,7 @@ NETWORK_BROKEN = "network broken"
 
 
 def mocked_rpc():
-    class MockedRpcServerClient(object):
+    class MockedRpcServerClient:
         queue = Queue()
         outbox = []
 
@@ -70,7 +71,7 @@ def mocked_rpc():
     return MockedRpcServerClient
 
 
-class mocked_options(object):
+class mocked_options:
     def __init__(self):
         self.spawn_rate = 5
         self.num_users = 5
@@ -84,7 +85,6 @@ class mocked_options(object):
         self.heartbeat_liveness = 3
         self.heartbeat_interval = 1
         self.stop_timeout = None
-        self.step_load = True
         self.connection_broken = False
 
     def reset_stats(self):
@@ -307,8 +307,6 @@ class TestLocustRunner(LocustTestCase):
 
     def test_reset_stats(self):
         class MyUser(User):
-            wait_time = constant(0)
-
             @task
             class task_set(TaskSet):
                 @task
@@ -332,8 +330,6 @@ class TestLocustRunner(LocustTestCase):
 
     def test_no_reset_stats(self):
         class MyUser(User):
-            wait_time = constant(0)
-
             @task
             class task_set(TaskSet):
                 @task
@@ -363,7 +359,6 @@ class TestLocustRunner(LocustTestCase):
 
     def test_users_can_call_runner_quit_without_deadlocking(self):
         class BaseUser(User):
-            wait_time = constant(0)
             stop_triggered = False
 
             @task
@@ -388,7 +383,6 @@ class TestLocustRunner(LocustTestCase):
 
     def test_runner_quit_can_run_on_stop_for_multiple_users_concurrently(self):
         class BaseUser(User):
-            wait_time = constant(0)
             stop_count = 0
 
             @task
@@ -494,6 +488,61 @@ class TestMasterWorkerRunners(LocustTestCase):
             "For some reason the master node's stats has not come in",
         )
 
+    def test_test_stop_event(self):
+        class TestUser(User):
+            wait_time = constant(0.1)
+
+            @task
+            def my_task(l):
+                pass
+
+        with mock.patch("locust.runners.WORKER_REPORT_INTERVAL", new=0.3):
+            # start a Master runner
+            master_env = Environment(user_classes=[TestUser])
+            test_stop_count = {"master": 0, "worker": 0}
+
+            @master_env.events.test_stop.add_listener
+            def _(*args, **kwargs):
+                test_stop_count["master"] += 1
+
+            master = master_env.create_master_runner("*", 0)
+            sleep(0)
+            # start a Worker runner
+            worker_env = Environment(user_classes=[TestUser])
+
+            @worker_env.events.test_stop.add_listener
+            def _(*args, **kwargs):
+                test_stop_count["worker"] += 1
+
+            worker = worker_env.create_worker_runner("127.0.0.1", master.server.port)
+
+            # give worker time to connect
+            sleep(0.1)
+            # issue start command that should trigger TestUsers to be spawned in the Workers
+            master.start(2, spawn_rate=1000)
+            sleep(0.1)
+            # check that worker nodes have started locusts
+            self.assertEqual(2, worker.user_count)
+            # give time for users to generate stats, and stats to be sent to master
+            sleep(0.1)
+            master_env.events.quitting.fire(environment=master_env, reverse=True)
+            master.quit()
+            sleep(0.1)
+            # make sure users are killed
+            self.assertEqual(0, worker.user_count)
+
+        # check the test_stop event was called one time in master and zero times in workder
+        self.assertEqual(
+            1,
+            test_stop_count["master"],
+            "The test_stop event was not called exactly one time in the master node",
+        )
+        self.assertEqual(
+            0,
+            test_stop_count["worker"],
+            "The test_stop event was called in the worker node",
+        )
+
     def test_distributed_shape(self):
         """
         Full integration test that starts both a MasterRunner and three WorkerRunner instances
@@ -501,8 +550,6 @@ class TestMasterWorkerRunners(LocustTestCase):
         """
 
         class TestUser(User):
-            wait_time = constant(0)
-
             @task
             def my_task(self):
                 pass
@@ -520,7 +567,8 @@ class TestMasterWorkerRunners(LocustTestCase):
                     return None
 
         with mock.patch("locust.runners.WORKER_REPORT_INTERVAL", new=0.3):
-            master_env = Environment(user_classes=[TestUser], shape_class=TestShape())
+            test_shape = TestShape()
+            master_env = Environment(user_classes=[TestUser], shape_class=test_shape)
             master_env.shape_class.reset_time()
             master = master_env.create_master_runner("*", 0)
 
@@ -539,18 +587,30 @@ class TestMasterWorkerRunners(LocustTestCase):
             # Ensure workers have connected and started the correct amounf of users
             for worker in workers:
                 self.assertEqual(3, worker.user_count, "Shape test has not reached stage 1")
+                self.assertEqual(
+                    9, test_shape.get_current_user_count(), "Shape is not seeing stage 1 runner user count correctly"
+                )
             # Ensure new stage with more users has been reached
             sleep(2)
             for worker in workers:
                 self.assertEqual(7, worker.user_count, "Shape test has not reached stage 2")
+                self.assertEqual(
+                    21, test_shape.get_current_user_count(), "Shape is not seeing stage 2 runner user count correctly"
+                )
             # Ensure new stage with less users has been reached
             sleep(2)
             for worker in workers:
                 self.assertEqual(1, worker.user_count, "Shape test has not reached stage 3")
+                self.assertEqual(
+                    3, test_shape.get_current_user_count(), "Shape is not seeing stage 3 runner user count correctly"
+                )
             # Ensure test stops at the end
             sleep(2)
             for worker in workers:
                 self.assertEqual(0, worker.user_count, "Shape test has not stopped")
+                self.assertEqual(
+                    0, test_shape.get_current_user_count(), "Shape is not seeing stopped runner user count correctly"
+                )
 
     def test_distributed_shape_stop_and_restart(self):
         """
@@ -558,8 +618,6 @@ class TestMasterWorkerRunners(LocustTestCase):
         """
 
         class TestUser(User):
-            wait_time = constant(0)
-
             @task
             def my_task(self):
                 pass
@@ -710,20 +768,45 @@ class TestMasterRunner(LocustTestCase):
             master = self.get_runner()
             server.mocked_send(Message("client_ready", None, "fake_client1"))
             server.mocked_send(Message("client_ready", None, "fake_client2"))
+            server.mocked_send(Message("client_ready", None, "fake_client3"))
 
-            master.start(1, 2)
+            master.start(3, 3)
             server.mocked_send(Message("spawning", None, "fake_client1"))
             server.mocked_send(Message("spawning", None, "fake_client2"))
+            server.mocked_send(Message("spawning", None, "fake_client3"))
 
-            sleep(0.3)
-            server.mocked_send(Message("heartbeat", {"state": STATE_RUNNING, "current_cpu_usage": 50}, "fake_client1"))
+            sleep(0.2)
+            server.mocked_send(
+                Message("heartbeat", {"state": STATE_RUNNING, "current_cpu_usage": 50, "count": 1}, "fake_client1")
+            )
+            server.mocked_send(
+                Message("heartbeat", {"state": STATE_RUNNING, "current_cpu_usage": 50, "count": 1}, "fake_client2")
+            )
+            server.mocked_send(
+                Message("heartbeat", {"state": STATE_RUNNING, "current_cpu_usage": 50, "count": 1}, "fake_client3")
+            )
 
-            sleep(0.3)
-            self.assertEqual(1, len(master.clients.missing))
-            self.assertNotEqual(STATE_STOPPED, master.state, "Not all workers went missing but test stopped anyway.")
+            sleep(0.2)
+            self.assertEqual(0, len(master.clients.missing))
+            self.assertEqual(3, master.worker_count)
+            self.assertNotIn(
+                master.state, [STATE_STOPPED, STATE_STOPPING], "Not all workers went missing but test stopped anyway."
+            )
 
-            sleep(0.3)
+            server.mocked_send(
+                Message("heartbeat", {"state": STATE_RUNNING, "current_cpu_usage": 50, "count": 1}, "fake_client1")
+            )
+
+            sleep(0.4)
             self.assertEqual(2, len(master.clients.missing))
+            self.assertEqual(1, master.worker_count)
+            self.assertNotIn(
+                master.state, [STATE_STOPPED, STATE_STOPPING], "Not all workers went missing but test stopped anyway."
+            )
+
+            sleep(0.2)
+            self.assertEqual(3, len(master.clients.missing))
+            self.assertEqual(0, master.worker_count)
             self.assertEqual(STATE_STOPPED, master.state, "All workers went missing but test didn't stop.")
 
     def test_master_total_stats(self):
@@ -1057,8 +1140,6 @@ class TestMasterRunner(LocustTestCase):
 
     def test_custom_shape_scale_up(self):
         class MyUser(User):
-            wait_time = constant(0)
-
             @task
             def my_task(self):
                 pass
@@ -1111,8 +1192,6 @@ class TestMasterRunner(LocustTestCase):
 
     def test_custom_shape_scale_down(self):
         class MyUser(User):
-            wait_time = constant(0)
-
             @task
             def my_task(self):
                 pass
@@ -1162,40 +1241,6 @@ class TestMasterRunner(LocustTestCase):
             # Wait to ensure shape_worker has stopped the test
             sleep(3)
             self.assertEqual("stopped", master.state, "The test has not been stopped by the shape class")
-
-    def test_spawn_locusts_in_stepload_mode(self):
-        with mock.patch("locust.rpc.rpc.Server", mocked_rpc()) as server:
-            master = self.get_runner()
-            for i in range(5):
-                server.mocked_send(Message("client_ready", None, "fake_client%i" % i))
-
-            # start a new swarming in Step Load mode: total locust count of 10, spawn rate of 2, step locust count of 5, step duration of 2s
-            master.start_stepload(10, 2, 5, 2)
-
-            # make sure the first step run is started
-            sleep(0.5)
-            self.assertEqual(5, len(server.outbox))
-
-            num_users = 0
-            end_of_last_step = len(server.outbox)
-            for _, msg in server.outbox:
-                num_users += msg.data["num_users"]
-
-            self.assertEqual(
-                5, num_users, "Total number of locusts that would have been spawned for first step is not 5"
-            )
-
-            # make sure the first step run is complete
-            sleep(2)
-            num_users = 0
-            idx = end_of_last_step
-            while idx < len(server.outbox):
-                msg = server.outbox[idx][1]
-                num_users += msg.data["num_users"]
-                idx += 1
-            self.assertEqual(
-                10, num_users, "Total number of locusts that would have been spawned for second step is not 10"
-            )
 
     def test_exception_in_task(self):
         class MyUser(User):
@@ -1289,7 +1334,6 @@ class TestWorkerRunner(LocustTestCase):
     def test_worker_stop_timeout(self):
         class MyTestUser(User):
             _test_state = 0
-            wait_time = constant(0)
 
             @task
             def the_task(self):
@@ -1302,7 +1346,7 @@ class TestWorkerRunner(LocustTestCase):
             test_start_run = [False]
 
             @environment.events.test_start.add_listener
-            def on_test_start(**kw):
+            def on_test_start(_environment, **kw):
                 test_start_run[0] = True
 
             worker = self.get_runner(environment=environment, user_classes=[MyTestUser])
@@ -1339,7 +1383,6 @@ class TestWorkerRunner(LocustTestCase):
     def test_worker_without_stop_timeout(self):
         class MyTestUser(User):
             _test_state = 0
-            wait_time = constant(0)
 
             @task
             def the_task(self):
@@ -1446,7 +1489,6 @@ class TestStopTimeout(LocustTestCase):
 
         class MyTestUser(User):
             tasks = [MyTaskSet]
-            wait_time = constant(0)
 
         environment = Environment(user_classes=[MyTestUser])
         runner = environment.create_local_runner()
@@ -1496,7 +1538,6 @@ class TestStopTimeout(LocustTestCase):
 
         class MyTestUser(User):
             tasks = [MyTaskSet]
-            wait_time = constant(0)
 
         environment = create_environment([MyTestUser], mocked_options())
         environment.stop_timeout = short_time
@@ -1518,7 +1559,7 @@ class TestStopTimeout(LocustTestCase):
 
         class MyTestUser(User):
             tasks = [MyTaskSet]
-            wait_time = between(1, 1)
+            wait_time = constant(1)
 
         environment = Environment(user_classes=[MyTestUser], stop_timeout=short_time)
         runner = environment.create_local_runner()
@@ -1548,7 +1589,6 @@ class TestStopTimeout(LocustTestCase):
 
         class MyTestUser(User):
             tasks = [MyTaskSet]
-            wait_time = constant(0)
 
         environment = create_environment([MyTestUser], mocked_options())
         environment.stop_timeout = short_time
@@ -1609,7 +1649,6 @@ class TestStopTimeout(LocustTestCase):
 
         class MyTestUser(User):
             tasks = [MyTaskSet]
-            wait_time = constant(0)
 
         environment = create_environment([MyTestUser], mocked_options())
         runner = environment.create_local_runner()
@@ -1699,7 +1738,6 @@ class TestStopTimeout(LocustTestCase):
 
         class MyTestUser(User):
             tasks = [MyTaskSet]
-            wait_time = constant(0)
 
         environment = Environment(user_classes=[MyTestUser], stop_timeout=2)
         runner = environment.create_local_runner()

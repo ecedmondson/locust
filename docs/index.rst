@@ -51,12 +51,21 @@ Other functionalities
     :maxdepth: 2
 
     generating-custom-load-shape
-    running-locust-in-step-load-mode
     retrieving-stats
     testing-other-systems
     extending-locust
     logging
     use-as-lib
+
+
+Further reading / knowledgebase
+-------------------------------
+
+.. toctree ::
+    :maxdepth: 1
+    
+    developing-locust-itself
+    further-reading
 
 
 API
@@ -65,15 +74,7 @@ API
     :maxdepth: 4
 
     api
-
-
-Further reading / knowledgebase
--------------------------------
-
-.. toctree ::
-    :maxdepth: 1
-
-    further-reading
+    
 
 
 Changelog

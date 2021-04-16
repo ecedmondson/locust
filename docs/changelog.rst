@@ -4,6 +4,62 @@ Changelog Highlights
 
 For full details of the Locust changelog, please see https://github.com/locustio/locust/blob/master/CHANGELOG.md
 
+1.4.4
+=====
+
+* Ensure runner.quit finishes even when users are broken https://github.com/locustio/locust/pull/1728
+* Make runner / user count available to LoadTestShape https://github.com/locustio/locust/pull/1719
+* Other small fixes
+
+1.4.3
+=====
+
+* Fix bug that broke the tooltips for charts in the Web UI 
+
+1.4.2
+=====
+
+* Multiple improvements for charting including tooltips etc
+* Added --html option to save HTML report https://github.com/locustio/locust/pull/1637
+* Lots of other small fixes
+
+1.4.1
+=====
+
+* Fix 100% cpu usage when running in docker/non-tty terminal https://github.com/locustio/locust/issues/1629
+
+1.4.0
+=====
+
+* You can now control user count from terminal while the test is running https://github.com/locustio/locust/pull/1612
+* Infinite run time is now the default for command line runs https://github.com/locustio/locust/pull/1625
+* wait_time now defaults to zero https://github.com/locustio/locust/pull/1626
+
+1.3.2
+=====
+
+* List Python 3.9 as supported in the package/on PyPi
+* Fix XSS vulnerability in the web UI (sounds important but really isn't, as Locust UI is not meant to be exposed to outside users)
+
+1.3.1
+=====
+
+* Bump minimum required gevent version to 20.9.0 (latest), as the previous ones had sneaky binary incompatibilities with the latest version of greenlet ("RuntimeWarning: greenlet.greenlet size changed, may indicate binary incompatibility. Expected 144 from C header, got 152 from PyObject")
+
+1.3.0
+=====
+
+* Breaking change: Remove step-load feature (now that we have LoadTestShape it is no longer needed)
+* More type hints to enable better code completion and linting of locustfiles
+
+Bug fixes: 
+
+* LoadTestShape.get\_run\_time is not relative to start of test https://github.com/locustio/locust/issues/1557
+* Refactor and fix delayed user stopping in combination with on\_stop https://github.com/locustio/locust/pull/1560
+* runner.quit gets blocked by slow on stop https://github.com/locustio/locust/issues/1552
+* Remove legacy code that was only needed for py2
+* Lots more
+
 1.2.3
 =====
 

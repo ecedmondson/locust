@@ -18,17 +18,19 @@ a User class may define.
 wait_time attribute
 -------------------
 
-In addition to the *tasks* attribute, one should also declare a 
-:py:attr:`wait_time <locust.User.wait_time>` method. It's used to determine
-for how long a simulated user will wait between executing tasks. Locust comes with a few built in 
-functions that return a few common wait_time methods.
+A User's :py:attr:`wait_time <locust.User.wait_time>` method is an optional attribute used to determine
+how long a simulated user should wait between executing tasks. If no :py:attr:`wait_time <locust.User.wait_time>` 
+is specified, a new task will be executed as soon as one finishes.
 
-The most common one is :py:attr:`between <locust.wait_time.between>`. It's used to make the simulated
-users wait a random time between a min and max value after each task execution. Other built in 
-wait time functions are :py:attr:`constant <locust.wait_time.constant>` and 
-:py:attr:`constant_pacing <locust.wait_time.constant_pacing>`.
+There are three built in wait time functions: 
 
-With the following locustfile, each user would wait between 5 and 15 seconds between tasks:
+* :py:attr:`constant <locust.wait_time.constant>` for a fixed amount of time
+
+* :py:attr:`between <locust.wait_time.between>` for a random time between a min and max value
+
+* :py:attr:`constant_pacing <locust.wait_time.constant_pacing>` for an adaptive time that ensures the task runs (at most) once every X seconds
+
+For example, to make each user wait between 0.5 and 10 seconds between every task execution:
 
 .. code-block:: python
 
@@ -39,12 +41,9 @@ With the following locustfile, each user would wait between 5 and 15 seconds bet
         def my_task(self):
             print("executing my_task")
 
-        wait_time = between(5, 15)
+        wait_time = between(0.5, 10)
 
-The wait_time method should return a number of seconds (or fraction of a second) and can also 
-be declared on a TaskSet class, in which case it will only be used for that TaskSet.
-
-It's also possible to declare your own wait_time method directly on a User or TaskSet class. 
+It's also possible to declare your own wait_time method directly on your class. 
 For example, the following User class would sleep for one second, then two, then three, etc.
 
 .. code-block:: python
@@ -113,6 +112,20 @@ the environment, or the :py:attr:`runner <locust.runners.Runner>` which it conta
 
 If run on a standalone locust instance, this will stop the entire run. If run on worker node, it will stop that particular node.
 
+.. _on-start-on-stop:
+
+on_start and on_stop methods
+----------------------------
+
+Users (and :ref:`TaskSets <tasksets>`) can declare an :py:meth:`on_start <locust.User.on_start>` method and/or
+:py:meth:`on_stop <locust.User.on_stop>` method. A User will call its
+:py:meth:`on_start <locust.User.on_start>` method when it starts running, and its
+:py:meth:`on_stop <locust.User.on_stop>` method when it stops running. For a TaskSet, the
+:py:meth:`on_start <locust.TaskSet.on_start>` method is called when a simulated user starts executing 
+that TaskSet, and :py:meth:`on_stop <locust.TaskSet.on_stop>` is called when the simulated user stops 
+executing that TaskSet (when :py:meth:`interrupt() <locust.TaskSet.interrupt>` is called, or the
+user is killed).
+
 Tasks
 =====
 
@@ -123,13 +136,10 @@ they execute, sleep for awhile, and then pick a new task and so on.
 The tasks are normal python callables and - if we were load-testing an auction website - they could do 
 stuff like "loading the start page", "searching for some product", "making a bid", etc. 
 
-Declaring tasks
+@task decorator
 ---------------
 
-The typical way of declaring tasks for a User class (or a TaskSet) it to use the
-:py:meth:`task <locust.task>` decorator.
-
-Here is an example:
+The easiest way to add a task for a User is by using the :py:meth:`task <locust.task>` decorator.
 
 .. code-block:: python
 
@@ -166,13 +176,10 @@ the following example *task2* will have twice the chance of being picked as *tas
 tasks attribute
 ---------------
 
-Using the @task decorator to declare tasks is a convenience, and usually the best way to do 
-it. However, it's also possible to define the tasks of a User or TaskSet by setting the
-:py:attr:`tasks <locust.User.tasks>` attribute (using the @task decorator will actually
-just populate the *tasks* attribute).
+Another way to define the tasks of a User is by setting the :py:attr:`tasks <locust.User.tasks>` attribute.
 
-The *tasks* attribute is either a list of Task, or a *<Task : int>* dict, where Task is either a 
-python callable or a TaskSet class (more on that below). If the task is a normal python function they 
+The *tasks* attribute is either a list of Tasks, or a *<Task : int>* dict, where Task is either a 
+python callable or a :ref:`TaskSet <tasksets>` class. If the task is a normal python function they 
 receive a single argument which is the User instance that is executing the task.
 
 Here is an example of a User task declared as a normal python function:
@@ -181,7 +188,7 @@ Here is an example of a User task declared as a normal python function:
 
     from locust import User, constant
     
-    def my_task(l):
+    def my_task(user):
         pass
     
     class MyUser(User):
@@ -208,8 +215,8 @@ and then Python's ``random.choice()`` is used pick tasks from the list.
 
 .. _tagging-tasks:
 
-Tagging tasks
--------------
+@tag decorator
+--------------
 
 By tagging tasks using the :py:func:`@tag <locust.tag>` decorator, you can be picky about what tasks are
 executed during the test using the :code:`--tags` and :code:`--exclude-tags` arguments.  Consider
@@ -250,188 +257,15 @@ executed.
 wins over inclusion, so if a task has a tag you've included and a tag you've excluded, it will not
 be executed.
 
+Events
+======
 
+If you want to run some setup code as part of your test, it is often enough to put it at the module
+level of your locustfile, but sometimes you need to do things at particular times in the run. For 
+this need, Locust provides event hooks.
 
-TaskSet class
-=============
-
-Since real websites are usually built up in an hierarchical way, with multiple sub-sections, 
-locust has the TaskSet class. A locust task can not only be a Python callable, but also a 
-TaskSet class. A TaskSet is a collection of locust tasks that will be executed much like the 
-tasks declared directly on a User class, with the user sleeping in between task executions.
-Here's a short example of a locustfile that has a TaskSet:
-
-.. code-block:: python
-
-    from locust import User, TaskSet, between
-    
-    class ForumSection(TaskSet):
-        @task(10)
-        def view_thread(self):
-            pass
-        
-        @task(1)
-        def create_thread(self):
-            pass
-        
-        @task(1)
-        def stop(self):
-            self.interrupt()
-    
-    class LoggedInUser(User):
-        wait_time = between(5, 120)
-        tasks = {ForumSection:2}
-        
-        @task
-        def index_page(self):
-            pass
-
-A TaskSet can also be inlined directly under a User/TaskSet class using the @task decorator:
-
-.. code-block:: python
-
-    class MyUser(User):
-        @task(1)
-        class MyTaskSet(TaskSet):
-            ...
-
-The tasks of a TaskSet class can be other TaskSet classes, allowing them to be nested any number 
-of levels. This allows us to define a behaviour that simulates users in a more realistic way. 
-
-For example we could define TaskSets with the following structure::
-
-    - Main user behaviour
-      - Index page
-      - Forum page
-        - Read thread
-          - Reply
-        - New thread
-        - View next page
-      - Browse categories
-        - Watch movie
-        - Filter movies
-      - About page
-
-When a running User thread picks a TaskSet class for execution an instance of this class will
-be created and execution will then go into this TaskSet. What happens then is that one of the 
-TaskSet's tasks will be picked and executed, and then the thread will sleep for a duration specified 
-by the User's wait_time function (unless a ``wait_time`` function has been declared directly on
-the TaskSet class, in which case it'll use that function instead), then pick a new task from the 
-TaskSet's tasks, wait again, and so on.
-
-
-
-Interrupting a TaskSet
-----------------------
-
-One important thing to know about TaskSets is that they will never stop executing their tasks, and 
-hand over execution back to their parent User/TaskSet, by themselves. This has to be done by the
-developer by calling the :py:meth:`TaskSet.interrupt() <locust.TaskSet.interrupt>` method. 
-
-.. autofunction:: locust.TaskSet.interrupt
-    :noindex:
-
-In the following example, if we didn't have the stop task that calls ``self.interrupt()``, the 
-simulated user would never stop running tasks from the Forum taskset once it has went into it:
-
-.. code-block:: python
-
-    class RegisteredUser(User):
-        @task
-        class Forum(TaskSet):
-            @task(5)
-            def view_thread(self):
-                pass
-            
-            @task(1)
-            def stop(self):
-                self.interrupt()
-        
-        @task
-        def frontpage(self):
-            pass
-
-Using the interrupt function, we can - together with task weighting - define how likely it 
-is that a simulated user leaves the forum.
-
-
-Differences between tasks in TaskSet and User classes
--------------------------------------------------------
-
-One difference for tasks residing under a TaskSet, compared to tasks residing directly under a User,
-is that the argument that they are passed when executed (``self`` for tasks declared as methods with 
-the :py:func:`@task <locust.task>` decorator) is a reference to the TaskSet instance, instead of 
-the User instance. The User instance can be accessed from within a TaskSet instance through the
-:py:attr:`TaskSet.user <locust.TaskSet.user>`. TaskSets also contains a convenience 
-:py:attr:`client <locust.TaskSet.client>` attribute that refers to the client attribute on the 
-User instance.
-
-
-Referencing the User instance, or the parent TaskSet instance
----------------------------------------------------------------
-
-A TaskSet instance will have the attribute :py:attr:`user <locust.TaskSet.user>` point to
-its User instance, and the attribute :py:attr:`parent <locust.TaskSet.parent>` point to its
-parent TaskSet instance.
-
-
-Tags and TaskSets
-------------------
-You can tag TaskSets using the :py:func:`@tag <locust.tag>` decorator in a similar way to normal tasks, as
-described :ref:`above <tagging-tasks>`, but there are some nuances worth mentioning. Tagging a TaskSet
-will automatically apply the tag(s) to all of the TaskSet's tasks. Furthermore, if you tag a task
-within a nested TaskSet, locust will execute that task even if the TaskSet isn't tagged.
-
-
-.. _sequential-taskset:
-
-SequentialTaskSet class
-=======================
-
-:py:class:`SequentialTaskSet <locust.SequentialTaskSet>` is a TaskSet whose tasks will be executed 
-in the order that they are declared. It is possible to nest SequentialTaskSets 
-within a TaskSet and vice versa.
-
-For example, the following code will request URLs /1-/4 in order, and then repeat.
-
-.. code-block:: python
-    
-    def function_task(taskset):
-        taskset.client.get("/3")
-    
-    class SequenceOfTasks(SequentialTaskSet):
-        @task
-        def first_task(self):
-            self.client.get("/1")
-            self.client.get("/2")
-        
-        # you can still use the tasks property to specify a list of tasks
-        tasks = [function_task]
-        
-        @task
-        def last_task(self):
-            self.client.get("/4")
-
-Note that you dont need SequentialTaskSets to just do some requests in order. It is often easier to 
-just do a whole user flow in a single task.
-
-.. _on-start-on-stop:
-
-
-on_start and on_stop methods
-============================
-
-User and TaskSet classes can declare an :py:meth:`on_start <locust.User.on_start>` method and/or
-:py:meth:`on_stop <locust.TaskSet.on_stop>` method. A User will call it's
-:py:meth:`on_start <locust.User.on_start>` method when it starts running, and it's
-:py:meth:`on_stop <locust.User.on_stop>` method when it stops running. For a TaskSet, the
-:py:meth:`on_start <locust.TaskSet.on_start>` method is called when a simulated user starts executing 
-that TaskSet, and :py:meth:`on_stop <locust.TaskSet.on_stop>` is called when the simulated user stops 
-executing that TaskSet (when :py:meth:`interrupt() <locust.TaskSet.interrupt>` is called, or the
-user is killed).
-
-test_start and test_stop events
-===============================
+test_start and test_stop
+------------------------
 
 If you need to run some code at the start or stop of a load test, you should use the 
 :py:attr:`test_start <locust.event.Events.test_start>` and :py:attr:`test_stop <locust.event.Events.test_stop>` 
@@ -442,17 +276,17 @@ events. You can set up listeners for these events at the module level of your lo
     from locust import events
     
     @events.test_start.add_listener
-    def on_test_start(**kwargs):
+    def on_test_start(environment, **kwargs):
         print("A new test is starting")
     
     @events.test_stop.add_listener
-    def on_test_stop(**kwargs):
+    def on_test_stop(environment, **kwargs):
         print("A new test is ending")
 
 When running Locust distributed the ``test_start`` and ``test_stop`` events will only be fired in the master node.
 
-init event
-==========
+init
+----
 
 The ``init`` event is triggered at the beginning of each Locust process. This is especially useful in distributed mode
 where each worker process (not each user) needs a chance to do some initialization. For example, let's say you have some
@@ -470,23 +304,15 @@ global state that all users spawned from this process will need:
         else:
             print("I'm on a worker or standalone node")
 
+other events
+------------
 
-Making HTTP requests
-=====================
+see :ref:`extending locust using event hooks <extending_locust>` for other events and more examples of how to use them.
 
-So far, we've only covered the task scheduling part of a User. In order to actually load test
-a system we need to make HTTP requests. To help us do this, the :py:class:`HttpUser <locust.HttpUser>`
-class exists. When using this class, each instance gets a 
-:py:attr:`client <locust.User.client>` attribute which will be an instance of
-:py:attr:`HttpSession <locust.clients.HttpSession>` which can be used to make HTTP requests.
+HttpUser class
+==============
 
-.. autoclass:: locust.HttpUser
-    :members: client
-    :noindex:
-
-When inheriting from the HttpUser class, we can use its client attribute to make HTTP requests
-against the server. Here is an example of a locust file that can be used to load test a site 
-with two URLs; **/** and **/about/**:
+:py:class:`HttpUser <locust.HttpUser>` is the most commonly used :py:class:`User <locust.User>`. It adds a :py:attr:`client <locust.HttpUser.client>` attribute which is used to make HTTP requests.
 
 .. code-block:: python
 
@@ -495,7 +321,7 @@ with two URLs; **/** and **/about/**:
     class MyUser(HttpUser):
         wait_time = between(5, 15)
         
-        @task(2)
+        @task(4)
         def index(self):
             self.client.get("/")
         
@@ -503,53 +329,37 @@ with two URLs; **/** and **/about/**:
         def about(self):
             self.client.get("/about/")
 
-Using the above User class, each simulated user will wait between 5 and 15 seconds
-between the requests, and **/** will be requested twice as much as **/about/**.
+
+client attribute / HttpSession
+------------------------------
+
+:py:attr:`client <locust.HttpUser.client>` is an instance of :py:class:`HttpSession <locust.clients.HttpSession>`. HttpSession is a subclass/wrapper for 
+:py:class:`requests.Session`, so its features are well documented and should be familiar to many. What HttpSession adds is mainly reporting of the request results into Locust (success/fail, response time, response length, name). 
 
 
-Using the HTTP client
-----------------------
-
-Each instance of HttpUser has an instance of :py:class:`HttpSession <locust.clients.HttpSession>`
-in the *client* attribute. The HttpSession class is actually a subclass of 
-:py:class:`requests.Session` and can be used to  make HTTP requests, that will be reported to User's
-statistics, using the :py:meth:`get <locust.clients.HttpSession.get>`, 
+It contains methods for all HTTP methods: :py:meth:`get <locust.clients.HttpSession.get>`, 
 :py:meth:`post <locust.clients.HttpSession.post>`, :py:meth:`put <locust.clients.HttpSession.put>`, 
-:py:meth:`delete <locust.clients.HttpSession.delete>`, :py:meth:`head <locust.clients.HttpSession.head>`, 
-:py:meth:`patch <locust.clients.HttpSession.patch>` and :py:meth:`options <locust.clients.HttpSession.options>` 
-methods. The HttpSession instance will preserve cookies between requests so that it can be used to log in 
-to websites and keep a session between requests. The client attribute can also be referenced from the User
-instance's TaskSet instances so that it's easy to retrieve the client and make HTTP requests from within your 
-tasks.
+... 
 
-Here's a simple example that makes a GET request to the */about* path (in this case we assume *self* 
-is an instance of a :py:class:`TaskSet <locust.TaskSet>` or :py:class:`HttpUser <locust.HttpUser>`
-class:
+
+Just like :py:class:`requests.Session`, it preserves cookies between requests so it can easily be used to log in to websites.
 
 .. code-block:: python
-
-    response = self.client.get("/about")
-    print("Response status code:", response.status_code)
-    print("Response content:", response.text)
-
-And here's an example making a POST request:
-
-.. code-block:: python
+    :caption: Make a POST request, look at the response and implicitly reuse any session cookies we got for a second request
 
     response = self.client.post("/login", {"username":"testuser", "password":"secret"})
+    print("Response status code:", response.status_code)
+    print("Response text:", response.text)
+    response = self.client.get("/my-profile")
 
-Safe mode
----------
-The HTTP client is configured to run in safe_mode. What this does is that any request that fails due to 
-a connection error, timeout, or similar will not raise an exception, but rather return an empty dummy 
-Response object. The request will be reported as a failure in User's statistics. The returned dummy
-Response's *content* attribute will be set to None, and its *status_code* will be 0.
+HttpSession catches any :py:class:`requests.RequestException` thrown by Session (caused by connection errors, timeouts or similar), instead returning a dummy 
+Response object with *status_code* set to 0 and *content* set to None.
 
 
 .. _catch-response:
 
-Manually controlling if a request should be considered successful or a failure
-------------------------------------------------------------------------------
+Validating responses
+--------------------
 
 Requests are considered successful if the HTTP response code is OK (<400), but it is often useful to 
 do some additional validation of the response.
@@ -574,7 +384,7 @@ You can also mark a request as successful, even if the response code was bad:
         if response.status_code == 404:
             response.success()
 
-You can even avoid logging a request at all by throwing an exception and then catching it outside the with-block. Or you can throw a :ref:`locust exception <exceptions>`, like in the example below, and let locust catch it.
+You can even avoid logging a request at all by throwing an exception and then catching it outside the with-block. Or you can throw a :ref:`locust exception <exceptions>`, like in the example below, and let Locust catch it.
 
 .. code-block:: python
 
@@ -584,11 +394,32 @@ You can even avoid logging a request at all by throwing an exception and then ca
         if response.status_code == 404:
             raise RescheduleTask()
 
+.. _rest:
+
+REST/JSON APIs
+--------------
+
+Here's an example of how to call a REST API and validate the response:
+
+.. code-block:: python
+    
+    from json import JSONDecodeError
+    ...
+    with self.client.post("/", json={"foo": 42, "bar": None}, catch_response=True) as response:
+        try:
+            if response.json()["greeting"] != "hello":
+                response.failure("Did not get expected value in greeting")
+        except JSONDecodeError:
+            response.failure("Response could not be decoded as JSON")
+        except KeyError:
+            response.failure("Response did not contain expected key 'greeting'")
+
+
 
 .. _name-parameter:
 
-Grouping requests to URLs with dynamic parameters
--------------------------------------------------
+Grouping requests
+-----------------
 
 It's very common for websites to have pages whose URLs contain some kind of dynamic parameter(s). 
 Often it makes sense to group these URLs together in User's statistics. This can be done
@@ -610,6 +441,10 @@ To improve performance, we configure requests to not look for HTTP proxy setting
 requests.Session's trust_env attribute to ``False``. If you don't want this you can manually set 
 ``locust_instance.client.trust_env`` to ``True``. For further details, refer to the 
 `documentation of requests <https://requests.readthedocs.io/en/master/api/#requests.Session.trust_env>`_.
+
+TaskSets
+================================
+TaskSets is a way to structure tests of hierarchial web sites/systems. You can :ref:`read more about it here <tasksets>`
 
 
 How to structure your test code

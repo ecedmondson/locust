@@ -1,10 +1,11 @@
 import os
 import platform
+import pty
 import signal
 import subprocess
 import textwrap
 from unittest import TestCase
-from subprocess import PIPE
+from subprocess import PIPE, STDOUT
 
 import gevent
 import requests
@@ -106,7 +107,9 @@ class TestLoadLocustfile(LocustTestCase):
             host = localhost  # With "="
             u 100             # Short form
             spawn-rate 5      # long form
-            headless          # boolean
+                              # boolean
+            headless
+            # (for some reason an inline comment makes boolean values fail in configargparse nowadays)
         """
             ),
             suffix=".conf",
@@ -237,18 +240,33 @@ class LocustProcessIntegrationTest(TestCase):
             )
             self.assertIn("Spawning 1 users at the rate 1 users/s", output)
 
-    def test_default_headless_spawn_options_with_shape(self):
-        content = (
-            MOCK_LOUCSTFILE_CONTENT
-            + """
-class LoadTestShape(LoadTestShape):
-    def tick(self):
-        run_time = self.get_run_time()
-        if run_time < 2:
-                return (10, 1)
+    def test_headless_spawn_options_wo_run_time(self):
+        with mock_locustfile() as mocked:
+            proc = subprocess.Popen(
+                ["locust", "-f", mocked.file_path, "--host", "https://test.com/", "--headless"],
+                stdout=PIPE,
+                stderr=PIPE,
+            )
+            gevent.sleep(1)
+            proc.send_signal(signal.SIGTERM)
+            stdout, stderr = proc.communicate()
+            self.assertEqual(0, proc.returncode)
+            stderr = stderr.decode("utf-8")
+            self.assertIn("Starting Locust", stderr)
+            self.assertIn("No run time limit set, use CTRL+C to interrupt", stderr)
+            self.assertIn("Shutting down (exit code 0), bye", stderr)
 
-        return None
-        """
+    def test_default_headless_spawn_options_with_shape(self):
+        content = MOCK_LOUCSTFILE_CONTENT + textwrap.dedent(
+            """
+            class LoadTestShape(LoadTestShape):
+                def tick(self):
+                    run_time = self.get_run_time()
+                    if run_time < 2:
+                            return (10, 1)
+
+                    return None
+            """
         )
         with mock_locustfile(content=content) as mocked:
             output = (
@@ -297,3 +315,100 @@ class LoadTestShape(LoadTestShape):
             gevent.sleep(1)
             self.assertEqual(200, requests.get("http://127.0.0.1:%i/" % port, timeout=1).status_code)
             proc.terminate()
+
+    def test_input(self):
+        LOCUSTFILE_CONTENT = textwrap.dedent(
+            """
+        from locust import User, TaskSet, task, between
+
+        class UserSubclass(User):
+            wait_time = between(0.2, 0.8)
+            @task
+            def t(self):
+                print("Test task is running")
+        """
+        )
+        with mock_locustfile(content=LOCUSTFILE_CONTENT) as mocked:
+            stdin_m, stdin_s = pty.openpty()
+            stdin = os.fdopen(stdin_m, "wb", 0)
+
+            proc = subprocess.Popen(
+                " ".join(
+                    [
+                        "locust",
+                        "-f",
+                        mocked.file_path,
+                        "--headless",
+                        "--run-time",
+                        "4s",
+                        "-u",
+                        "0",
+                    ]
+                ),
+                stderr=STDOUT,
+                stdin=stdin_s,
+                stdout=PIPE,
+                shell=True,
+            )
+            gevent.sleep(1)
+
+            stdin.write(b"w")
+            gevent.sleep(0.1)
+            stdin.write(b"W")
+            gevent.sleep(0.1)
+            stdin.write(b"s")
+            gevent.sleep(0.1)
+            stdin.write(b"S")
+
+            gevent.sleep(1)
+
+            output = proc.communicate()[0].decode("utf-8")
+            stdin.close()
+            self.assertIn("Spawning 1 users at the rate 100 users/s", output)
+            self.assertIn("Spawning 10 users at the rate 100 users/s", output)
+            self.assertIn("1 Users have been stopped", output)
+            self.assertIn("10 Users have been stopped", output)
+            self.assertIn("Test task is running", output)
+
+    def test_html_report_option(self):
+        with mock_locustfile() as mocked:
+            with temporary_file("", suffix=".html") as html_report_file_path:
+                try:
+                    output = (
+                        subprocess.check_output(
+                            [
+                                "locust",
+                                "-f",
+                                mocked.file_path,
+                                "--host",
+                                "https://test.com/",
+                                "--run-time",
+                                "5s",
+                                "--headless",
+                                "--html",
+                                html_report_file_path,
+                            ],
+                            stderr=subprocess.STDOUT,
+                            timeout=10,
+                        )
+                        .decode("utf-8")
+                        .strip()
+                    )
+                except subprocess.CalledProcessError as e:
+                    raise AssertionError(
+                        "Running locust command failed. Output was:\n\n%s" % e.stdout.decode("utf-8")
+                    ) from e
+
+                with open(html_report_file_path, encoding="utf-8") as f:
+                    html_report_content = f.read()
+
+        # make sure title appears in the report
+        self.assertIn("<title>Test Report</title>", html_report_content)
+
+        # make sure host appears in the report
+        self.assertIn("https://test.com/", html_report_content)
+
+        # make sure the charts container appears in the report
+        self.assertIn("charts-container", html_report_content)
+
+        self.assertNotIn("Download the Report", html_report_content, "Download report link found in HTML content")
