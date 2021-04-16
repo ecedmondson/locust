@@ -25,6 +25,7 @@ from .stats import StatsCSV
 from .util.cache import memoize
 from .util.rounding import proper_round
 from .util.timespan import parse_timespan
+from .html import get_html_report
 
 
 logger = logging.getLogger(__name__)
@@ -35,9 +36,7 @@ DEFAULT_CACHE_TIME = 2.0
 
 class WebUI:
     """
-    Sets up and runs a Flask web
-
-     that can start and stop load tests using the
+    Sets up and runs a Flask web app that can start and stop load tests using the
     :attr:`environment.runner <locust.env.Environment.runner>` as well as show the load test statistics
     in :attr:`environment.stats <locust.env.Environment.stats>`
     """
@@ -67,7 +66,15 @@ class WebUI:
     extending index.html."""
 
     def __init__(
-        self, environment, host, port, auth_credentials=None, tls_cert=None, tls_key=None, stats_csv_writer=None
+        self,
+        environment,
+        host,
+        port,
+        auth_credentials=None,
+        tls_cert=None,
+        tls_key=None,
+        stats_csv_writer=None,
+        delayed_start=False,
     ):
         """
         Create WebUI instance and start running the web server in a separate greenlet (self.greenlet)
@@ -80,6 +87,8 @@ class WebUI:
                            Should be supplied in the format: "user:pass".
         tls_cert: A path to a TLS certificate
         tls_key: A path to a TLS private key
+        delayed_start: Whether or not to delay starting web UI until `start()` is called. Delaying web UI start
+                       allows for adding Flask routes or Blueprints before accepting requests, avoiding errors.
         """
         environment.web_ui = self
         self.stats_csv_writer = stats_csv_writer or StatsCSV(environment, stats_module.PERCENTILES_TO_REPORT)
@@ -90,6 +99,7 @@ class WebUI:
         self.tls_key = tls_key
         app = Flask(__name__)
         self.app = app
+        app.jinja_options["extensions"].append("jinja2.ext.do")
         app.debug = True
         app.root_path = os.path.dirname(os.path.abspath(__file__))
         self.app.config["BASIC_AUTH_ENABLED"] = False
@@ -110,6 +120,8 @@ class WebUI:
                 )
         if environment.runner:
             self.update_template_args()
+        if not delayed_start:
+            self.start()
 
         @app.route("/")
         @self.auth_required_if_enabled
@@ -119,28 +131,28 @@ class WebUI:
             self.update_template_args()
             return render_template("index.html", **self.template_args)
 
+        @app.route("/emily")
+        @self.auth_required_if_enabled
+        def bevy():
+            return "Hello World"
+
         @app.route("/swarm", methods=["POST"])
         @self.auth_required_if_enabled
         def swarm():
             assert request.method == "POST"
-            user_count = int(request.form["user_count"])
-            spawn_rate = float(request.form["spawn_rate"])
+            print(request.form)
+            print(dir(environment.runner))
             if request.form.get("host"):
-                environment.host = str(request.form["host"])
-
-            if environment.step_load:
-                step_user_count = int(request.form["step_user_count"])
-                step_duration = parse_timespan(str(request.form["step_duration"]))
-                environment.runner.start_stepload(user_count, spawn_rate, step_user_count, step_duration)
-                return jsonify(
-                    {"success": True, "message": "Swarming started in Step Load Mode", "host": environment.host}
-                )
+                # Replace < > to guard against XSS
+                environment.host = str(request.form["host"]).replace("<", "").replace(">", "")
 
             if environment.shape_class:
                 environment.runner.start_shape()
                 return jsonify(
                     {"success": True, "message": "Swarming started using shape class", "host": environment.host}
                 )
+            user_count = int(request.form["user_count"])
+            spawn_rate = float(request.form["spawn_rate"])
 
             environment.runner.start(user_count, spawn_rate)
             return jsonify({"success": True, "message": "Swarming started", "host": environment.host})
@@ -162,56 +174,7 @@ class WebUI:
         @app.route("/stats/report")
         @self.auth_required_if_enabled
         def stats_report():
-            stats = self.environment.runner.stats
-
-            start_ts = stats.start_time
-            start_time = datetime.datetime.fromtimestamp(start_ts)
-            start_time = start_time.strftime("%Y-%m-%d %H:%M:%S")
-
-            end_ts = stats.last_request_timestamp
-            end_time = datetime.datetime.fromtimestamp(end_ts)
-            end_time = end_time.strftime("%Y-%m-%d %H:%M:%S")
-
-            host = None
-            if environment.host:
-                host = environment.host
-            elif environment.runner.user_classes:
-                all_hosts = set([l.host for l in environment.runner.user_classes])
-                if len(all_hosts) == 1:
-                    host = list(all_hosts)[0]
-
-            requests_statistics = list(chain(sort_stats(stats.entries), [stats.total]))
-            failures_statistics = sort_stats(stats.errors)
-            exceptions_statistics = []
-            for exc in environment.runner.exceptions.values():
-                exc["nodes"] = ", ".join(exc["nodes"])
-                exceptions_statistics.append(exc)
-
-            history = stats.history
-
-            static_js = ""
-            js_files = ["jquery-1.11.3.min.js", "echarts.common.min.js", "vintage.js", "chart.js"]
-            for js_file in js_files:
-                path = os.path.join(os.path.dirname(__file__), "static", js_file)
-                with open(path, encoding="utf8") as f:
-                    content = f.read()
-                static_js += "// " + js_file + "\n"
-                static_js += content
-                static_js += "\n\n\n"
-
-            res = render_template(
-                "report.html",
-                int=int,
-                round=round,
-                requests_statistics=requests_statistics,
-                failures_statistics=failures_statistics,
-                exceptions_statistics=exceptions_statistics,
-                start_time=start_time,
-                end_time=end_time,
-                host=host,
-                history=history,
-                static_js=static_js,
-            )
+            res = get_html_report(self.environment, show_download_link=not request.args.get("download"))
             if request.args.get("download"):
                 res = app.make_response(res)
                 res.headers["Content-Disposition"] = "attachment;filename=report_%s.html" % time()
@@ -365,17 +328,14 @@ class WebUI:
         def exceptions_csv():
             data = StringIO()
             writer = csv.writer(data)
-            writer.writerow(["Count", "Message", "Traceback", "Nodes"])
-            for exc in environment.runner.exceptions.values():
-                nodes = ", ".join(exc["nodes"])
-                writer.writerow([exc["count"], exc["msg"], exc["traceback"], nodes])
-
+            self.stats_csv_writer.exceptions_csv(writer)
             return _download_csv_response(data.getvalue(), "exceptions")
 
-        self.greenlet = gevent.spawn(self.start)
+    def start(self):
+        self.greenlet = gevent.spawn(self.start_server)
         self.greenlet.link_exception(greenlet_exception_handler)
 
-    def start(self):
+    def start_server(self):
         if self.tls_cert and self.tls_key:
             self.server = pywsgi.WSGIServer(
                 (self.host, self.port), self.app, log=None, keyfile=self.tls_key, certfile=self.tls_cert
@@ -437,19 +397,19 @@ class WebUI:
         else:
             worker_count = 0
 
+        stats = self.environment.runner.stats
+
         self.template_args = {
             "state": self.environment.runner.state,
             "is_distributed": is_distributed,
             "user_count": self.environment.runner.user_count,
             "version": version,
             "host": host,
+            "history": stats.history,
             "override_host_warning": override_host_warning,
             "num_users": options and options.num_users,
             "spawn_rate": options and options.spawn_rate,
-            "step_users": options and options.step_users,
-            "step_time": options and options.step_time,
             "worker_count": worker_count,
-            "is_step_load": self.environment.step_load,
             "is_shape": self.environment.shape_class,
             "stats_history_enabled": options and options.stats_history_enabled,
         }
