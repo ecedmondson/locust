@@ -126,10 +126,15 @@ class WebUI:
         @app.route("/")
         @self.auth_required_if_enabled
         def index():
+            print()
             print(dir(environment.runner))
+            print()
             print(dir(environment))
+            print()
+            print(environment.user_classes)
+            print()
             print(dir(environment.runner.environment))
-            print(dir(environment.runner.state))
+            print()
             if not environment.runner:
                 return make_response("Error: Locust Environment does not have any runner", 500)
             self.update_template_args()
