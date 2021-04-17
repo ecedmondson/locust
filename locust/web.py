@@ -127,8 +127,9 @@ class WebUI:
         @self.auth_required_if_enabled
         def index():
             print(dir(environment.runner))
-            print(environment.runner.context)
-            print(dir(environment.runner.context))
+            print(dir(environment))
+            print(dir(environment.runner.environment))
+            print(dir(environment.runner.state))
             if not environment.runner:
                 return make_response("Error: Locust Environment does not have any runner", 500)
             self.update_template_args()
