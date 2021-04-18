@@ -38,7 +38,7 @@ def parse_user_class_dict_from_environment(user_classes):
     # eventually change name by adding in a test name property on test clients
     # putting it in now as separate name and value to remind myself to do it/
     # somewhat make it more easily future proof
-    return [{"value": x.select_value , "class": x, "name": x.select_name} for x in user_classes]
+    return [{"value": x.select_value , "class": x, "client_name": x.select_name} for x in user_classes]
 
 class WebUI:
     """
