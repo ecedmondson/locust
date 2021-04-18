@@ -131,6 +131,8 @@ class WebUI:
             print()
             print(dir(environment))
             print()
+            one_user_class = environment.user_classes[0]
+            print(dir(one_user_class))
             print(environment.user_classes)
             print()
             print(dir(environment.runner.environment))
@@ -155,16 +157,25 @@ class WebUI:
                 # Replace < > to guard against XSS
                 environment.host = str(request.form["host"]).replace("<", "").replace(">", "")
 
-            if environment.shape_class:
-                environment.runner.start_shape()
-                return jsonify(
-                    {"success": True, "message": "Swarming started using shape class", "host": environment.host}
-                )
+            #if environment.shape_class:
+            #    environment.runner.start_shape()
+            #    return jsonify(
+            #        {"success": True, "message": "Swarming started using shape class", "host": environment.host}
+            #    )
             user_count = int(request.form["user_count"])
             spawn_rate = float(request.form["spawn_rate"])
+            print()
+            print("env run start: ")
+            print(environment.runner.start)
+            print(dir(environment.runner.start))
+            print()
+            print("env run start shape")
+            print(environment.runner.start_shape)
+            print(dir(environment.runner.start_shape))
+            print()          
 
-            environment.runner.start(user_count, spawn_rate)
-            return jsonify({"success": True, "message": "Swarming started", "host": environment.host})
+            #environment.runner.start(user_count, spawn_rate)
+            #return jsonify({"success": True, "message": "Swarming started", "host": environment.host})
 
         @app.route("/stop")
         @self.auth_required_if_enabled
