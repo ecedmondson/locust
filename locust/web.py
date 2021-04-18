@@ -40,6 +40,9 @@ def parse_user_class_dict_from_environment(user_classes):
     # somewhat make it more easily future proof
     return [{"value": x.select_value , "class": x, "client_name": x.select_name} for x in user_classes]
 
+def get_user_class_from_select_value(test_client_value, user_classes_list):
+    return list(filter(lambda x: x['value'] == test_client_value), user_classes_list)[0]
+
 class WebUI:
     """
     Sets up and runs a Flask web app that can start and stop load tests using the
@@ -174,6 +177,12 @@ class WebUI:
             #    )
             user_count = int(request.form["user_count"])
             spawn_rate = float(request.form["spawn_rate"])
+            environment.runner.user_class_test_selection = get_user_class_from_select_value(
+                request.form["test_client"], 
+                parse_user_class_dict_from_environment(
+                    environment.runner.user_classes
+                ),
+            )
             print()
             print("env run start: ")
             print(environment.runner.start)

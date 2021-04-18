@@ -139,6 +139,10 @@ class Runner:
         returns a list "bucket" with the weighted users
         """
         bucket = []
+        print()
+        print("in weight users: ")
+        print(getattr(self, "user_class_test_selection", "DID NOT FIND CORRECT ATTR"))
+        print()
         weight_sum = sum([user.weight for user in self.user_classes])
         residuals = {}
         for user in self.user_classes:
@@ -168,9 +172,20 @@ class Runner:
 
         return bucket
 
+    def create_exact_number_of_users(self):
+        pass
+
     def spawn_users(self, spawn_count, spawn_rate, wait=False):
         bucket = self.weight_users(spawn_count)
+        print()
+        print("bucket")
+        print(bucket)
+        print()
         spawn_count = len(bucket)
+        print()
+        print('spawn count')
+        print(spawn_count)
+        print()
         if self.state == STATE_INIT or self.state == STATE_STOPPED:
             self.update_state(STATE_SPAWNING)
 
