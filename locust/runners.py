@@ -139,13 +139,9 @@ class Runner:
         returns a list "bucket" with the weighted users
         """
         bucket = []
-        print()
-        print("in weight users: ")
-        print(getattr(self, "user_class_test_selection", "DID NOT FIND CORRECT ATTR"))
-        print()
-        weight_sum = sum([user.weight for user in self.user_classes])
+        weight_sum = sum([user.weight for user in self.user_class_test_selection])
         residuals = {}
-        for user in self.user_classes:
+        for user in self.user_class_test_selection:
             if self.environment.host is not None:
                 user.host = self.environment.host
 
@@ -182,10 +178,6 @@ class Runner:
         print(bucket)
         print()
         spawn_count = len(bucket)
-        print()
-        print('spawn count')
-        print(spawn_count)
-        print()
         if self.state == STATE_INIT or self.state == STATE_STOPPED:
             self.update_state(STATE_SPAWNING)
 
@@ -194,7 +186,7 @@ class Runner:
             "Spawning %i users at the rate %g users/s (%i users already running)..."
             % (spawn_count, spawn_rate, existing_count)
         )
-        occurrence_count = dict([(l.__name__, 0) for l in self.user_classes])
+        occurrence_count = dict([(l.__name__, 0) for l in self.user_class_test_selection])
 
         def spawn():
             sleep_time = 1.0 / spawn_rate

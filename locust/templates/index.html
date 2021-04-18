@@ -78,6 +78,8 @@
                         </select>
                         <label for="spawn_rate">Spawn rate <span style="color:#8a8a8a;">(users spawned/second)</span></label>
                         <input type="text" name="spawn_rate" id="spawn_rate" class="val" value="{{ spawn_rate or "" }}"/><br>
+                        <label for="specify_user_count">Specify number of users per test client?</label>
+                        <input type="checkbox" name="specify_user_count" id="specify_user_count" class="val" value="specify"/><br>
                     {% endif %}
                     <label for="host">
                         Host <span style="color:#8a8a8a;">(e.g. http://www.example.com)</span>

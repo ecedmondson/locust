@@ -41,7 +41,7 @@ def parse_user_class_dict_from_environment(user_classes):
     return [{"value": x.select_value , "class": x, "client_name": x.select_name} for x in user_classes]
 
 def get_user_class_from_select_value(test_client_value, user_classes_list):
-    return list(filter(lambda x: x['value'] == test_client_value, user_classes_list))[0]
+    return list(filter(lambda x: x['value'] == test_client_value, user_classes_list))[0]['class']
 
 class WebUI:
     """
