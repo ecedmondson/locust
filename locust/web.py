@@ -135,24 +135,11 @@ class WebUI:
         @app.route("/")
         @self.auth_required_if_enabled
         def index():
-            print()
-            print(dir(environment.runner))
-            print()
-            print(dir(environment))
-            print()
-            one_user_class = environment.user_classes[0]
-            print(dir(one_user_class))
-            print(environment.user_classes)
-            print()
-            print(dir(environment.runner.environment))
-            print()
             if not environment.runner:
                 return make_response("Error: Locust Environment does not have any runner", 500)
             self.update_template_args()
             user_class_args = parse_user_class_dict_from_environment(environment.runner.user_classes)
-            print(user_class_args)
             all_template_args = {**self.template_args, "user_classes": user_class_args}
-            print(all_template_args)
             return render_template("index.html", **all_template_args)
 
         @app.route("/emily")
@@ -165,16 +152,16 @@ class WebUI:
         def swarm():
             assert request.method == "POST"
             print(request.form)
-            print(dir(environment.runner))
             if request.form.get("host"):
                 # Replace < > to guard against XSS
                 environment.host = str(request.form["host"]).replace("<", "").replace(">", "")
 
-            #if environment.shape_class:
-            #    environment.runner.start_shape()
-            #    return jsonify(
-            #        {"success": True, "message": "Swarming started using shape class", "host": environment.host}
-            #    )
+            if environment.shape_class:
+                print("shapw class called")
+                environment.runner.start_shape()
+                return jsonify(
+                   {"success": True, "message": "Swarming started using shape class", "host": environment.host}
+                )
             user_count = int(request.form["user_count"])
             spawn_rate = float(request.form["spawn_rate"])
             environment.runner.user_class_test_selection = get_user_class_from_select_value(
@@ -182,19 +169,10 @@ class WebUI:
                 parse_user_class_dict_from_environment(
                     environment.runner.user_classes
                 ),
-            )
-            print()
-            print("env run start: ")
-            print(environment.runner.start)
-            print(dir(environment.runner.start))
-            print()
-            print("env run start shape")
-            print(environment.runner.start_shape)
-            print(dir(environment.runner.start_shape))
-            print()          
+            )       
 
-            #environment.runner.start(user_count, spawn_rate)
-            #return jsonify({"success": True, "message": "Swarming started", "host": environment.host})
+            environment.runner.start(user_count, spawn_rate)
+            return jsonify({"success": True, "message": "Swarming started", "host": environment.host})
 
         @app.route("/stop")
         @self.auth_required_if_enabled
