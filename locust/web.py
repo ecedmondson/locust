@@ -34,6 +34,12 @@ greenlet_exception_handler = greenlet_exception_logger(logger)
 DEFAULT_CACHE_TIME = 2.0
 
 
+def parse_user_class_dict_from_environment(user_classes):
+    # eventually change name by adding in a test name property on test clients
+    # putting it in now as separate name and value to remind myself to do it/
+    # somewhat make it more easily future proof
+    return [{"value": type(x).__name__, "class": x, "name": type(x).__name__} for x in user_classes]
+
 class WebUI:
     """
     Sets up and runs a Flask web app that can start and stop load tests using the
@@ -140,7 +146,9 @@ class WebUI:
             if not environment.runner:
                 return make_response("Error: Locust Environment does not have any runner", 500)
             self.update_template_args()
-            return render_template("index.html", **self.template_args)
+            user_class_args = parse_user_class_dict_from_environment(environment.runner.user_classes)
+            all_template_args = {**self.template_args, "user_classes": user_class_args}
+            return render_template("index.html", **all_template_args)
 
         @app.route("/emily")
         @self.auth_required_if_enabled
