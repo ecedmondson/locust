@@ -147,7 +147,9 @@ class WebUI:
                 return make_response("Error: Locust Environment does not have any runner", 500)
             self.update_template_args()
             user_class_args = parse_user_class_dict_from_environment(environment.runner.user_classes)
+            print(user_class_args)
             all_template_args = {**self.template_args, "user_classes": user_class_args}
+            print(all_template_args)
             return render_template("index.html", **all_template_args)
 
         @app.route("/emily")
