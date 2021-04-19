@@ -192,6 +192,11 @@ table.stats {
   font-weight: bold;
 }
 
+.non-title {
+  font-size: 16px;
+  font-weight: italics;
+}
+
 .dialogs {
   position: relative; }
   .dialogs .dialog {
