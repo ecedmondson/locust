@@ -31,7 +31,7 @@ function createDivForSelectedTest(test) {
     return test_div;
 }
 
-function testClientNotAlreadyInArtificialList(test_name) {
+function istestClientAlreadyInArtificialList(test_name) {
     var tests_already_selected = document.getElementById('tests_selected_text_area').children;
     console.log(tests_already_selected);
     console.log(test_name);
@@ -44,7 +44,9 @@ function handleClickofAddTestButton() {
     var current_selection = document.getElementById("test_client").value;
     var options = document.getElementById("test_client").options;
     var selected_test = Array.from(options).filter(e => e.value == current_selection)[0];
-    if (testClientNotAlreadyInArtificialList(selected_test.textContent)) {
+    var test_selection_status = testClientNotAlreadyInArtificialList(selected_test.textContent);
+    console.log(test_selection_status);
+    if (test_selection_status) {
         removeNoneTextFromTestsSelected();
         var tests_selected_artificial_list = document.getElementById("tests_selected_text_area");
         var appendage = createDivForSelectedTest(selected_test);
@@ -71,8 +73,8 @@ document.addEventListener("click", function(e) {
     if(e.target.getAttribute("id").includes("_removal")) {
         console.log('remove caugh: ');
         console.log(e);
-        console.log(e.parentNode);
-        handleClickofRemoveTestButton(e.parentNode);
+        console.log(e.target.parentNode);
+        handleClickofRemoveTestButton(e.target.parentNode);
     }
     // <i class="far fa-times-circle"></i>
 }, false);
