@@ -37,7 +37,7 @@ function istestClientAlreadyInArtificialList(test_name) {
     if(Array.from(tests_already_selected).length > 0) {
         console.log(Array.from(tests_already_selected)[0].textContent);
         console.log(Array.from(tests_already_selected)[0].textContent == test_name);
-        console.log(Array.form(tests_already_selected)[0].textContent.includes(test_name));
+        console.log(Array.from(tests_already_selected)[0].textContent.includes(test_name));
     }
     console.log('test_name');
     console.log(test_name);
