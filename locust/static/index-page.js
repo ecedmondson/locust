@@ -61,7 +61,10 @@ document.addEventListener("click", function(e) {
         handleClickofAddTestButton();
     }
 
-    if(e.target.getAttribute("class") == "test_selection_artificial_list") {
+    console.log(e.target);
+    console.log(e.target.getAttribute("id").includes("_removal"));
+
+    if(e.target.getAttribute("id").includes("_removal") {
         console.log(e.parentNode);
         handleClickofRemoveTestButton(e.parentNode);
     }
