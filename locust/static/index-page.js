@@ -25,7 +25,12 @@ function createDivForSelectedTest(test) {
     test_div.setAttribute("class", "test_selection_artificial_list");
     test_div.setAttribute("id", test.value.concat("_selected"));
     test_div.innerText = test.textContent;
-    test_div.appendChild(createRemoveTestButton(test.value));
+    var removal = createRemoveTestButton(test.value);
+    console.log(test);
+    console.log(test_div);
+    console.log(removal);
+    test_div.appendChild(removal);
+    console.log(test_div);
     return test;
 }
 
