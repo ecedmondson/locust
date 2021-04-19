@@ -44,7 +44,7 @@ function handleClickofAddTestButton() {
     var current_selection = document.getElementById("test_client").value;
     var options = document.getElementById("test_client").options;
     var selected_test = Array.from(options).filter(e => e.value == current_selection)[0];
-    var test_selection_status = testClientNotAlreadyInArtificialList(selected_test.textContent);
+    var test_selection_status = istestClientAlreadyInArtificialList(selected_test.textContent);
     console.log(test_selection_status);
     if (test_selection_status) {
         removeNoneTextFromTestsSelected();
