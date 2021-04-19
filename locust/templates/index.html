@@ -75,13 +75,17 @@
                             <option value="{{ user.value }}" class="val">{{ user.client_name }}</option>
                             {% endfor %}
                         </select><br>
+                        <input type="button" name="add_test_client" id="add_test_client_button" value="Add Test"><br>
                         <div class="val title" id="tests_selected_title">
                             Tests Selected: 
                             <p class="non-title" id="tests_selected_text_area">None Selected</p>
                         </div>
-                        <input type="button" name="add_test_client" id="add_test_client_button" value="Add Test"><br>
-                        <label for="specify_user_count" class="title">Specify Number of Users Per Test Client or Let Locust Randomize?</label>
+                        <div class="val title" id="specify_or_randomize_user_count">
+                            Specify Number of Users Per Test Client or Let Locust Randomize?
+                        </div>
+                        <label for="specify_user_count" class="non-title">Specify Number of Users Per Test Client</label>
                         <input type="radio" name="specify_user_count" id="specify_user_count" value="specify">
+                        <label for="randomize_user_count" class="non-title">Randomize Number of Users</label>
                         <input type="radio" name="randomize_user_count" id="randomize_user_count" value="randomize" checked><br>
                         <label for="user_count" class="title">Total Number Users to Simulate: </label>
                         <input type="text" name="user_count" id="user_count" class="val" value="{{ num_users or "" }}"/><br>
