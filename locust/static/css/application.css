@@ -187,6 +187,10 @@ table.stats {
   padding-left: 10px;
   padding-right: 10px; }
 
+.title {
+  font-size: 30px;
+  fond-weight: bold;
+}
 .dialogs {
   position: relative; }
   .dialogs .dialog {
