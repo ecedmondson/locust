@@ -27,22 +27,28 @@ function createDivForSelectedTest(test) {
     test_div.setAttribute("id", test.value.concat("_selected"));
     test_div.innerText = test.textContent.concat(" ");
     var removal = createRemoveTestButton(test.value);
-    console.log(test);
-    console.log(test_div);
-    console.log(removal);
     test_div.appendChild(removal);
-    console.log(test_div);
     return test_div;
+}
+
+function testClientNotAlreadyInArtificialList(test_name) {
+    var tests_already_selected = document.getElementById('tests_selected_title').children;
+    console.log(tests_already_selected);
+    var test_clicked = Array.from(tests_already_selected).filter(e => e.textContent == test_name);
+    console.log(test_clicked);
+    return test_clicked.length == 0;
 }
 
 function handleClickofAddTestButton() {
     var current_selection = document.getElementById("test_client").value;
     var options = document.getElementById("test_client").options;
     var selected_test = Array.from(options).filter(e => e.value == current_selection)[0];
-    removeNoneTextFromTestsSelected();
-    var tests_selected_artificial_list = document.getElementById("tests_selected_text_area");
-    var appendage = createDivForSelectedTest(selected_test);
-    tests_selected_text_area.append(appendage);
+    if (testClientNotAlreadyInArtificialList(selected_test.textContent)) {
+        removeNoneTextFromTestsSelected();
+        var tests_selected_artificial_list = document.getElementById("tests_selected_text_area");
+        var appendage = createDivForSelectedTest(selected_test);
+        tests_selected_text_area.append(appendage);
+    }
 }
 
 function handleClickofRemoveTestButton(selection) {
@@ -61,10 +67,9 @@ document.addEventListener("click", function(e) {
         handleClickofAddTestButton();
     }
 
-    console.log(e.target);
-    console.log(e.target.getAttribute("id").includes("_removal"));
-
     if(e.target.getAttribute("id").includes("_removal")) {
+        console.log('remove caugh: ');
+        console.log(e);
         console.log(e.parentNode);
         handleClickofRemoveTestButton(e.parentNode);
     }
