@@ -35,14 +35,16 @@ function istestClientAlreadyInArtificialList(test_name) {
     console.log("tests already selected: ")
     console.log(Array.from(tests_already_selected));
     if(Array.from(tests_already_selected).length > 0) {
-        console.log(Array.from(tests_already_selected)[0].textContent)
+        console.log(Array.from(tests_already_selected)[0].textContent);
+        console.log(Array.from(tests_already_selected)[0].textContent == test_name);
+        console.log(Array.form(tests_already_selected)[0].textContent.includes(test_name));
     }
     console.log('test_name');
     console.log(test_name);
-    var test_clicked = Array.from(tests_already_selected).filter(e => e.textContent == test_name);
+    var test_clicked_found_in_list = Array.from(tests_already_selected).filter(e => e.textContent == test_name);
     console.log("tests clicked: ")
-    console.log(test_clicked);
-    return test_clicked.length == 0;
+    console.log(test_clicked_found_in_list);
+    return test_clicked_found_in_list.length == 0;
 }
 
 function handleClickofAddTestButton() {
