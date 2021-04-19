@@ -69,23 +69,24 @@
                         <input type="text" name="spawn_rate" id="spawn_rate" class="val_disabled" value="-" disabled="disabled" title="Disabled for tests using LoadTestShape class"/><br>
                         <input type="hidden" name="spawn_rate" id="spawn_rate" value="0"/><br>
                     {% else %}
-                        <label for="user_count" class="title">Total Number Users to Simulate: </label>
-                        <input type="text" name="user_count" id="user_count" class="val" value="{{ num_users or "" }}"/><br>
                         <label for="test_client" class="title">Test Client to Use: </label>
                         <select id="test_client" name="test_client">
                             {% for user in user_classes %}
                             <option value="{{ user.value }}" class="val">{{ user.client_name }}</option>
                             {% endfor %}
                         </select><br>
-                        <input type="button" name="add_test_client" id="add_test_client_button" value="Add Test"><br>
-                        <label for="spawn_rate" class="title">Spawn Rate: <span style="color:#8a8a8a;">(users spawned/second)</span></label>
-                        <input type="text" name="spawn_rate" id="spawn_rate" class="val" value="{{ spawn_rate or "" }}"/><br>
-                        <label for="specify_user_count" class="title">Specify Number of Users Per Client?</label>
-                        <input type="checkbox" name="specify_user_count" id="specify_user_count" value="specify"/><br>
                         <div class="val title" id="tests_selected_title">
                             Tests Selected: 
                             <p class="non-title" id="tests_selected_text_area">None Selected</p>
                         </div>
+                        <input type="button" name="add_test_client" id="add_test_client_button" value="Add Test"><br>
+                        <label for="specify_user_count" class="title">Specify Number of Users Per Test Client or Let Locust Randomize?</label>
+                        <input type="radio" name="specify_user_count" id="specify_user_count" value="specify">
+                        <input type="radio" name="randomize_user_count" id="randomize_user_count" value="randomize" checked><br>
+                        <label for="user_count" class="title">Total Number Users to Simulate: </label>
+                        <input type="text" name="user_count" id="user_count" class="val" value="{{ num_users or "" }}"/><br>
+                        <label for="spawn_rate" class="title">Spawn Rate: <span style="color:#8a8a8a;">(users spawned/second)</span></label>
+                        <input type="text" name="spawn_rate" id="spawn_rate" class="val" value="{{ spawn_rate or "" }}"/><br>
                     {% endif %}
                     <label for="host">
                         Host <span style="color:#8a8a8a;">(e.g. http://www.example.com)</span>
