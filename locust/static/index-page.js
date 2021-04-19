@@ -23,9 +23,9 @@ function createRemoveTestButton(test_value) {
 
 function createDivForSelectedTest(test) {
     var test_div = document.createElement("div");
-    test_div.setAttribute("class", "test_selection_artificial_list non-title");
+    test_div.setAttribute("class", "test_selection_artificial_list");
     test_div.setAttribute("id", test.value.concat("_selected"));
-    test_div.innerText = test.textContent;
+    test_div.innerText = test.textContent.concat(" ");
     var removal = createRemoveTestButton(test.value);
     console.log(test);
     console.log(test_div);

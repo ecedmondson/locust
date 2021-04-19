@@ -188,13 +188,18 @@ table.stats {
   padding-right: 10px; }
 
 .title {
-  font-size: 30px;
+  font-size: 16px;
   font-weight: bold;
 }
 
 .non-title {
-  font-size: 16px;
+  font-size: 12px;
   font-weight: italics;
+}
+
+.test_selection_artificial_list {
+  font-size: 12px;
+  font-weight: normal;
 }
 
 .dialogs {
