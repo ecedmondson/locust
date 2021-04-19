@@ -35,7 +35,7 @@ function istestClientAlreadyInArtificialList(test_name) {
     console.log("tests already selected: ")
     console.log(Array.from(tests_already_selected));
     console.log(Array.from(tests_already_selected)[0].textContent)
-    console.log('test_name')l
+    console.log('test_name');
     console.log(test_name);
     var test_clicked = Array.from(tests_already_selected).filter(e => e.textContent == test_name);
     console.log("tests clicked: ")
