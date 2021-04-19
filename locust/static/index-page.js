@@ -64,7 +64,7 @@ document.addEventListener("click", function(e) {
     console.log(e.target);
     console.log(e.target.getAttribute("id").includes("_removal"));
 
-    if(e.target.getAttribute("id").includes("_removal") {
+    if(e.target.getAttribute("id").includes("_removal")) {
         console.log(e.parentNode);
         handleClickofRemoveTestButton(e.parentNode);
     }
