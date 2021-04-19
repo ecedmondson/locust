@@ -3,4 +3,7 @@ document.addEventListener('click', function(e)) {
 	//   #selected_users = document.getElementsByTagName()
 	// }
 	console.log(e);
+	var test_name = document.getElementById("test_client");
+	console.log(test_name);
+	// <i class="far fa-times-circle"></i>
 }
