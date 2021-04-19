@@ -9,7 +9,7 @@ function removeNoneTextFromTestsSelected() {
 function addNoneTextToTestsSelected() {
     var tests_selected_artificial_list = document.getElementById("tests_selected_text_area");
     if(tests_selected_artificial_list.children.length == 0) {
-        tests_selected_artificial_list.setAttribute("", "None Selected");
+        tests_selected_artificial_list.innerText = "None Selected";
     }
 
 }
@@ -33,9 +33,11 @@ function createDivForSelectedTest(test) {
 
 function istestClientAlreadyInArtificialList(test_name) {
     var tests_already_selected = document.getElementById('tests_selected_text_area').children;
-    console.log(tests_already_selected);
+    console.log("tests already selected: ")
+    console.log(Array.from(tests_already_selected));
     console.log(test_name);
     var test_clicked = Array.from(tests_already_selected).filter(e => e.textContent == test_name);
+    console.log("tests clicked: ")
     console.log(test_clicked);
     return test_clicked.length == 0;
 }
@@ -45,6 +47,7 @@ function handleClickofAddTestButton() {
     var options = document.getElementById("test_client").options;
     var selected_test = Array.from(options).filter(e => e.value == current_selection)[0];
     var test_selection_status = istestClientAlreadyInArtificialList(selected_test.textContent);
+    console.log("test_selection_status");
     console.log(test_selection_status);
     if (test_selection_status) {
         removeNoneTextFromTestsSelected();
