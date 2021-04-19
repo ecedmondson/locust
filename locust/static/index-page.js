@@ -1,6 +1,5 @@
 function removeNoneTextFromTestsSelected() {
     var tests_selected_artificial_list = document.getElementById("tests_selected_text_area");
-    console.log(tests_selected_artificial_list.textContent == "None Selected");
     if(tests_selected_artificial_list.textContent == "None Selected") {
         tests_selected_artificial_list.innerText = "";
     }
@@ -35,6 +34,8 @@ function istestClientAlreadyInArtificialList(test_name) {
     var tests_already_selected = document.getElementById('tests_selected_text_area').children;
     console.log("tests already selected: ")
     console.log(Array.from(tests_already_selected));
+    console.log(Array.from(tests_already_selected)[0].textContent)
+    console.log('test_name')l
     console.log(test_name);
     var test_clicked = Array.from(tests_already_selected).filter(e => e.textContent == test_name);
     console.log("tests clicked: ")
@@ -74,9 +75,6 @@ document.addEventListener("click", function(e) {
     }
 
     if(e.target.getAttribute("id").includes("_removal")) {
-        console.log('remove caugh: ');
-        console.log(e);
-        console.log(e.target.parentNode);
         handleClickofRemoveTestButton(e.target.parentNode);
     }
     // <i class="far fa-times-circle"></i>
