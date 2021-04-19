@@ -34,6 +34,7 @@ function createDivForSelectedTest(test) {
 function testClientNotAlreadyInArtificialList(test_name) {
     var tests_already_selected = document.getElementById('tests_selected_text_area').children;
     console.log(tests_already_selected);
+    console.log(test_name);
     var test_clicked = Array.from(tests_already_selected).filter(e => e.textContent == test_name);
     console.log(test_clicked);
     return test_clicked.length == 0;
