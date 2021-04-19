@@ -70,12 +70,13 @@
                     {% else %}
                         <label for="user_count">Number of total users to simulate</label>
                         <input type="text" name="user_count" id="user_count" class="val" value="{{ num_users or "" }}"/><br>
-                        <label for="test_client">Test Client to Use</label>
+                        <label for="test_client">Test Client to Use (Click the add/plus sign button)</label>
                         <select id="test_client" name="test_client" class="val">
                             {% for user in user_classes %}
                             <option value="{{ user.value }}" class="val">{{ user.client_name }}</option>
                             {% endfor %}
                         </select>
+                        <input type="button" name="add_test_client" id="add_test_client_button" class="val" value="Add Test"><br>
                         <label for="spawn_rate">Spawn rate <span style="color:#8a8a8a;">(users spawned/second)</span></label>
                         <input type="text" name="spawn_rate" id="spawn_rate" class="val" value="{{ spawn_rate or "" }}"/><br>
                         <label for="specify_user_count">Specify number of users per test client?</label>
@@ -317,6 +318,7 @@
         {% include 'stats_data.html' %}
     </script>
     <script type="text/javascript" src="./static/chart.js?v={{ version }}"></script>
+    <script type="text/javascript" src=".static/index-page.js"></script>
     <script type="text/javascript" src="./static/locust.js?v={{ version }}"></script>
     {% block extended_script %}
     {% endblock extended_script %}
