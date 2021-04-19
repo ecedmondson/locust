@@ -1,7 +1,8 @@
 function removeNoneTextFromTestsSelected() {
     var tests_selected_artificial_list = document.getElementById("tests_selected_text_area");
+    console.log(tests_selected_artificial_list.textContent == "None Selected");
     if(tests_selected_artificial_list.textContent == "None Selected") {
-        tests_selected_artificial_list.setAttribute("textContent", "");
+        tests_selected_artificial_list.innerText = "";
     }
 }
 
@@ -31,7 +32,7 @@ function createDivForSelectedTest(test) {
     console.log(removal);
     test_div.appendChild(removal);
     console.log(test_div);
-    return test;
+    return test_div;
 }
 
 function handleClickofAddTestButton() {
@@ -40,7 +41,8 @@ function handleClickofAddTestButton() {
     var selected_test = Array.from(options).filter(e => e.value == current_selection)[0];
     removeNoneTextFromTestsSelected();
     var tests_selected_artificial_list = document.getElementById("tests_selected_text_area");
-    tests_selected_text_area.append(createDivForSelectedTest(selected_test));
+    var appendage = createDivForSelectedTest(selected_test);
+    tests_selected_text_area.append(appendage);
 }
 
 function handleClickofRemoveTestButton(selection) {

@@ -189,8 +189,9 @@ table.stats {
 
 .title {
   font-size: 30px;
-  fond-weight: bold;
+  font-weight: bold;
 }
+
 .dialogs {
   position: relative; }
   .dialogs .dialog {
