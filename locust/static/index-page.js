@@ -41,7 +41,7 @@ function istestClientAlreadyInArtificialList(test_name) {
     }
     console.log('test_name');
     console.log(test_name);
-    var test_clicked_found_in_list = Array.from(tests_already_selected).filter(e => e.textContent == test_name);
+    var test_clicked_found_in_list = Array.from(tests_already_selected).filter(e => e.textContent.includes(test_name));
     console.log("tests clicked: ")
     console.log(test_clicked_found_in_list);
     return test_clicked_found_in_list.length == 0;
