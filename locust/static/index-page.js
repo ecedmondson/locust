@@ -55,6 +55,49 @@ function handleClickofRemoveTestButton(selection) {
     addNoneTextToTestsSelected();  
 }
 
+function generateLabelElement(for_text, class_text, text_content) {
+    var label = document.createElement("label");
+    label.setAttribute("for", for_text);
+    label.setAttribute("class", class_text);
+    label.innerText = text_content;
+    return label
+}
+
+function generateInputElement(type_text, name_text, id_text, class_text, value_text) {
+    var input = document.createElement("input");
+    input.setAttribute("type", type_text);
+    input.setAttribute("name", name_text);
+    input.setAttribute("id", id_text);
+    input.setAttribute("class", class_text);
+    input.setAttribute("value", value_text);
+    return input
+}
+
+function generateTotalNumbersLabel() {
+    return generateLabelElement("user_count", "title", "Total Number of Users to Simulate: ")
+}
+
+function generateTotalNumbersInput() {
+    return generateInputElement("text", "user_count", "user_count", "val test-input", '{{ num_users or ""}}')
+}
+
+function removeAllUserNumberInputs(container_element) {
+    var children = container_element.children
+    for(var i = children.length - 1; i < children.length; i--) {
+        var child = children[i];
+        input_container.removeChild(child)
+    }
+}
+
+function setTotalNumberInputForRandomize() {
+    var input_container = document.getElementById("user-num-input-container");
+    removeAllUserNumberInputs(input_container);
+    var new_label = generateTotalNumbersLabel();
+    var new_input = generateTotalNumbersInput()
+    input_container.appendChild(new_label);
+    input_container.appendChild(new_input);
+}
+
 
 
 document.addEventListener("click", function(e) {
@@ -80,6 +123,8 @@ document.getElementById("specify_user_count").addEventListener("click", function
     console.log('specify click');
     console.log(e);
     console.log(e.target.checked);
+    var tests_selected = document.getElementById('tests_selected_text_area');
+    console.log(tests_selected.children);
 }, false)
 
 document.getElementById("randomize_user_count").addEventListener("load", function(e) {

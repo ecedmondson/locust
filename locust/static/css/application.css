@@ -210,12 +210,21 @@ table.stats {
 .test_selection_artificial_list {
   font-size: 12px;
   font-weight: normal;
+  color: #0ceb3c;
+}
+
+.user-radio-container {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  justify-content: flex-start;
+
 }
 
 .dialogs {
   position: relative; }
   .dialogs .dialog {
-    width: 398px;
+    width: 415px;
     position: absolute;
     left: 50%;
     top: 60px;
