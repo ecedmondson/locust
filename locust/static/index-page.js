@@ -32,18 +32,7 @@ function createDivForSelectedTest(test) {
 
 function istestClientAlreadyInArtificialList(test_name) {
     var tests_already_selected = document.getElementById('tests_selected_text_area').children;
-    console.log("tests already selected: ")
-    console.log(Array.from(tests_already_selected));
-    if(Array.from(tests_already_selected).length > 0) {
-        console.log(Array.from(tests_already_selected)[0].textContent);
-        console.log(Array.from(tests_already_selected)[0].textContent == test_name);
-        console.log(Array.from(tests_already_selected)[0].textContent.includes(test_name));
-    }
-    console.log('test_name');
-    console.log(test_name);
     var test_clicked_found_in_list = Array.from(tests_already_selected).filter(e => e.textContent.includes(test_name));
-    console.log("tests clicked: ")
-    console.log(test_clicked_found_in_list);
     return test_clicked_found_in_list.length == 0;
 }
 
@@ -52,8 +41,6 @@ function handleClickofAddTestButton() {
     var options = document.getElementById("test_client").options;
     var selected_test = Array.from(options).filter(e => e.value == current_selection)[0];
     var test_selection_status = istestClientAlreadyInArtificialList(selected_test.textContent);
-    console.log("test_selection_status");
-    console.log(test_selection_status);
     if (test_selection_status) {
         removeNoneTextFromTestsSelected();
         var tests_selected_artificial_list = document.getElementById("tests_selected_text_area");
@@ -81,5 +68,28 @@ document.addEventListener("click", function(e) {
     if(e.target.getAttribute("id").includes("_removal")) {
         handleClickofRemoveTestButton(e.target.parentNode);
     }
-    // <i class="far fa-times-circle"></i>
 }, false);
+
+document.getElementById("randomize_user_count").addEventListener("click", function(e) {
+    console.log("randomize click");
+    console.log(e);
+    console.log(e.checked);
+}, false)
+
+document.getElementById("specify_user_count").addEventListener("click", function(e) {
+    console.log('specify click');
+    console.log(e);
+    console.log(e.checked);
+}, false)
+
+document.getElementById("randomize_user_count").addEventListener("load", function(e) {
+    console.log('randomize load');
+    console.log(e);
+    console.log(e.checked);
+}, false)
+
+document.getElementById("specify_user_count").addEventListener("load", function(e) {
+    console.log('specify load');
+    console.log(e);
+    console.log(e.checked);
+}, false)

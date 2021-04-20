@@ -190,6 +190,7 @@ table.stats {
 .title {
   font-size: 16px;
   font-weight: bold;
+  padding: .5em;
 }
 
 .non-title {
