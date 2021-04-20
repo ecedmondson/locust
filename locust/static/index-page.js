@@ -89,7 +89,7 @@ function removeAllUserNumberInputs(container_element) {
     }
 }
 
-function setTotalNumberInputForRandomize() {
+function setTotalUserNumberInputForRandomize() {
     var input_container = document.getElementById("user-num-input-container");
     removeAllUserNumberInputs(input_container);
     var new_label = generateTotalNumbersLabel();
@@ -98,6 +98,18 @@ function setTotalNumberInputForRandomize() {
     input_container.appendChild(new_input);
 }
 
+function getInputsForAllTestsSelected() {
+    var tests_selected_container = document.getElementById('tests_selected_text_area');
+    var tests_selected = tests_selected.children;
+    var new_inputs [];
+    // for(var i = 0; i < tests_selected.length; i++) {
+    //     var l
+    // }
+}
+
+function setUserNumberInputForSpecify() {
+  
+}
 
 
 document.addEventListener("click", function(e) {
@@ -108,7 +120,7 @@ document.addEventListener("click", function(e) {
         handleClickofAddTestButton();
     }
 
-    if(e.target.getAttribute("id").includes("_removal")) {
+    if(e.target.getAttribute("id").textContent.includes("_removal")) {
         handleClickofRemoveTestButton(e.target.parentNode);
     }
 }, false);
@@ -123,8 +135,7 @@ document.getElementById("specify_user_count").addEventListener("click", function
     console.log('specify click');
     console.log(e);
     console.log(e.target.checked);
-    var tests_selected = document.getElementById('tests_selected_text_area');
-    console.log(tests_selected.children);
+
 }, false)
 
 document.getElementById("randomize_user_count").addEventListener("load", function(e) {
