@@ -83,10 +83,10 @@
                         <div class="val title" id="specify_or_randomize_user_count">
                             Specify Number of Users Per Test Client or Let Locust Randomize?
                         </div>
-                        <label for="specify_user_count" class="non-title">Specify Number of Users Per Test Client</label>
-                        <input type="radio" name="specify_user_count" id="specify_user_count" value="specify">
-                        <label for="randomize_user_count" class="non-title">Randomize Number of Users</label>
-                        <input type="radio" name="randomize_user_count" id="randomize_user_count" value="randomize" checked><br>
+                        <label for="select_user_count" class="non-title">Randomize User Count</label>
+                        <input type="radio" name="select_user_count" id="randomize_user_count" value="randomize" checked><br>
+                        <label for="specify_user_count" class="non-title">Specify User Count per Test Client</label>
+                        <input type="radio" name="select_user_count" id="specify_user_count" value="specify">
                         <label for="user_count" class="title">Total Number Users to Simulate: </label>
                         <input type="text" name="user_count" id="user_count" class="val" value="{{ num_users or "" }}"/><br>
                         <label for="spawn_rate" class="title">Spawn Rate: <span style="color:#8a8a8a;">(users spawned/second)</span></label>
