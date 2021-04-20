@@ -73,23 +73,23 @@ document.addEventListener("click", function(e) {
 document.getElementById("randomize_user_count").addEventListener("click", function(e) {
     console.log("randomize click");
     console.log(e);
-    console.log(e.checked);
+    console.log(e.target.checked);
 }, false)
 
 document.getElementById("specify_user_count").addEventListener("click", function(e) {
     console.log('specify click');
     console.log(e);
-    console.log(e.checked);
+    console.log(e.target.checked);
 }, false)
 
 document.getElementById("randomize_user_count").addEventListener("load", function(e) {
     console.log('randomize load');
     console.log(e);
-    console.log(e.checked);
+    console.log(e.target.checked);
 }, false)
 
 document.getElementById("specify_user_count").addEventListener("load", function(e) {
     console.log('specify load');
     console.log(e);
-    console.log(e.checked);
+    console.log(e.taret.checked);
 }, false)

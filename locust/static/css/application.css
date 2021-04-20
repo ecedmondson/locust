@@ -190,12 +190,21 @@ table.stats {
 .title {
   font-size: 16px;
   font-weight: bold;
-  padding: .5em;
+  padding-top: .5em;
+}
+
+.test-input {
+  max-width: 95%;
+  min-width: 88%;
 }
 
 .non-title {
   font-size: 12px;
   font-weight: italics;
+}
+
+.add-test-button {
+  padding-top: .3em;
 }
 
 .test_selection_artificial_list {
