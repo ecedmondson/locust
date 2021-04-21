@@ -189,12 +189,10 @@ class WebUI:
                 )
             user_classes = parse_user_class_dict_from_environment(environment.runner.user_classes)
             data = parse_data(request.form, user_classes)
-            pprint(data)
-            raise Exception('woah!')
             environment.runner.user_class_test_selection = list(data['selected_test_name_class_dict'].values())
             environment.runner.parse_form_start_test(data)
 
-            environment.runner.start(user_count, spawn_rate)  # , specify_user_count=specify_user_count)
+            # environment.runner.start(user_count, spawn_rate)  # , specify_user_count=specify_user_count)
             return jsonify({"success": True, "message": "Swarming started", "host": environment.host})
 
         @app.route("/stop")
