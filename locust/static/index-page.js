@@ -89,7 +89,7 @@ function generateTotalNumbersLabel() {
 }
 
 function generateTotalNumbersInput() {
-    return generateInputElement("text", "user_count", "user_count", "val test-input", '{{ num_users or ""}}');
+    return generateInputElement("text", "user_count", "user_count", "val test-input", "");
 }
 
 function removeAllUserNumberInputs(container_element) {
@@ -123,7 +123,7 @@ function getInputsForAllTestsSelected() {
             "title",
             child.innerText,
             );
-        
+        new_inputs.push(label);
         var input = generateInputElement(
             "test",
             user_count_text,
@@ -132,11 +132,6 @@ function getInputsForAllTestsSelected() {
             ""
         );
         new_inputs.push(input);
-        new_inputs.push(label);
-        // <label for="event_details_get_user_count" class="title">Number of 'Event Details GET' Users: </label>
-        // <input type="text" name="event_details_get_user_count" id="event_details_get_user_count" class="val test-input" value="{{ num_users or "" }}"/><br>
-        // <label for="live_booth_attendee_user_count" class="title">Number of 'Live Booth Attendee' Users: </label>
-        // <input type="text" name="live_booth_attendee_user_count" id="live_booth_attendee_user_count" class="val test-input" value="{{ num_users or "" }}"/><br>
     }
     return new_inputs;
 }
