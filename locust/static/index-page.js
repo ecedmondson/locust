@@ -177,6 +177,14 @@ function addTestToSpecifyGroup() {
     current_selection.appendChild(input);
 }
 
+ifIsInputElement(child, original_ele) {
+    var name_is = child.attributes.name;
+    var child_text = child.attributes.name.textContent.replace("_user_count", "");
+    var original_text = original_ele.attributes.id.textContent.replace("_selected", "");
+    var are_equal = child_text == original_text;
+    return name_is && are_equal;
+
+
 function removeTestFromSpecifyGroup(ele) {
     var input_container = document.getElementById("user-num-input-container");
     var children = input_container.children;
