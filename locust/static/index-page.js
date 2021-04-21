@@ -161,7 +161,8 @@ function addTestToSpecifyGroup() {
     var selected_test = Array.from(options).filter(e => e.value == current_selection)[0];
     var input_container = document.getElementById("user-num-input-container");
     var user_count_text = selected_test.attributes.value.textContent.concat("_user_count");
-    if(input_container.children.length == 2 && input_container.children[0].textContent.includes("No tests selected :(")) {
+    console.log(input_container.children.length)
+    if(input_container.children.length == 2 && input_container.children[1].textContent.includes("No tests selected :(")) {
         input_container.removeChild(input_container.chidlren[0]);
     }
     var label = generateLabelElement(
