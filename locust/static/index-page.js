@@ -94,10 +94,11 @@ function generateTotalNumbersInput() {
 
 function removeAllUserNumberInputs(container_element) {
     var children = container_element.children;
-    var child_len = children.length;
+    var child_len = children.length - 1;
     console.log(children);
-    for(var i = 0; i < child_len; i++) {
+    for(var i = child_len; i >= 0; i--) {
         console.log(children.length);
+        console.log(child_len);
         console.log(i);
         console.log('child');
         var child = children[i];
