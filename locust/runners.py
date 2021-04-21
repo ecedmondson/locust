@@ -114,7 +114,7 @@ class Runner:
             print(v.method)
             print(v.num_requests)
             print(v.num_failures)
-            print(v.num_reqs_per_second)
+            # print(v.num_reqs_per_second)
             pprint(dir(v))
             print()
         print("stats errors")
