@@ -193,8 +193,8 @@ function ifIsInputElement(child, original_ele) {
 
 function getTests() {
     var final_test_set = document.getElementById('tests_selected_text_area').children;
-    var values = Array.form(final_test_set).map( s => s.textContent);
-    document.getElementsByClassName("hidden-select")[0].setAttribute('value', values);
+    var values = Array.from(final_test_set).map( s => s.textContent);
+    document.getElementById("tests-selected-hidden").setAttribute('value', values);
 }
 
 function removeTestFromSpecifyGroup(ele) {
