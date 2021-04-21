@@ -70,22 +70,29 @@ function generateInputElement(type_text, name_text, id_text, class_text, value_t
     input.setAttribute("id", id_text);
     input.setAttribute("class", class_text);
     input.setAttribute("value", value_text);
-    return input
+    return input;
+}
+
+function getSpecifyTitleElement() {
+    var title = document.createElement("p");
+    title.setAttribute("class", "title");
+    title.innerText = "Specify Number of Users to Simulate: ";
+    return title;
 }
 
 function generateTotalNumbersLabel() {
-    return generateLabelElement("user_count", "title", "Total Number of Users to Simulate: ")
+    return generateLabelElement("user_count", "title", "Total Number of Users to Simulate: ");
 }
 
 function generateTotalNumbersInput() {
-    return generateInputElement("text", "user_count", "user_count", "val test-input", '{{ num_users or ""}}')
+    return generateInputElement("text", "user_count", "user_count", "val test-input", '{{ num_users or ""}}');
 }
 
 function removeAllUserNumberInputs(container_element) {
     var children = container_element.children
     for(var i = children.length - 1; i < children.length; i--) {
         var child = children[i];
-        input_container.removeChild(child)
+        input_container.removeChild(child);
     }
 }
 
@@ -93,7 +100,7 @@ function setTotalUserNumberInputForRandomize() {
     var input_container = document.getElementById("user-num-input-container");
     removeAllUserNumberInputs(input_container);
     var new_label = generateTotalNumbersLabel();
-    var new_input = generateTotalNumbersInput()
+    var new_input = generateTotalNumbersInput();
     input_container.appendChild(new_label);
     input_container.appendChild(new_input);
 }
@@ -101,15 +108,27 @@ function setTotalUserNumberInputForRandomize() {
 function getInputsForAllTestsSelected() {
     var tests_selected_container = document.getElementById('tests_selected_text_area');
     var tests_selected = tests_selected.children;
-    var new_inputs [];
-    // for(var i = 0; i < tests_selected.length; i++) {
-    //     var l
-    // }
+    var new_inputs [getSpecifyTitleElement()];
+    for(var i = 0; i < tests_selected.length; i++) {
+        var child = tests_selected[i];
+        var label = generateLabelElement(child.innerText)
+        // <label for="event_details_get_user_count" class="title">Number of 'Event Details GET' Users: </label>
+        // <input type="text" name="event_details_get_user_count" id="event_details_get_user_count" class="val test-input" value="{{ num_users or "" }}"/><br>
+        // <label for="live_booth_attendee_user_count" class="title">Number of 'Live Booth Attendee' Users: </label>
+        // <input type="text" name="live_booth_attendee_user_count" id="live_booth_attendee_user_count" class="val test-input" value="{{ num_users or "" }}"/><br>
+
+    }
 }
 
 function setUserNumberInputForSpecify() {
-  
+    var input_container = document.getElementById("user-num-input-container");
+    removeAllUserNumberInputs(input_container);
+    var new_inputs = getInputsForAllTestsSelected();
+    for(var i = 0; i < new_inputs.length; i++) {
+        input_container.appendChild(new_inputs[i]);
+    }
 }
+
 
 
 document.addEventListener("click", function(e) {
