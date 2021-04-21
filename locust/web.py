@@ -49,7 +49,7 @@ def parse_data(form, user_classes):
     data['test_names'] = [x.strip() for x in ",".split(form['tests-selected-hidden'])]
     print(data)
     print(user_classes)
-    data['test_dicts_by_ui_name'] = {test_name: test_dict for test_name in data['test_names'] for test_dict in user_classes if test_dict["client_namee"] == test_name}
+    data['test_dicts_by_ui_name'] = {test_name: test_dict for test_name in data['test_names'] for test_dict in user_classes if test_dict["client_name"] == test_name}
     print(data)
     print()
     if form['select_user_count'] == "randomize":
