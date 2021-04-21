@@ -193,9 +193,7 @@ function ifIsInputElement(child, original_ele) {
 
 function getTests() {
     var final_test_set = document.getElementById('tests_selected_text_area').children;
-    console.log(final_test_set);
     var values = Array.from(final_test_set).map( s => s.textContent);
-    console.log(values);
     document.getElementById("tests-selected-hidden").setAttribute('value', values);
 }
 
@@ -227,6 +225,10 @@ document.addEventListener("click", function(e) {
         handleClickofAddTestButton();
     }
 
+    if(e.target.textContent.includes("Start swarming")) {
+        getTests();
+    }
+
     if(ifIdAttrIsRemoval(e.target)) {
         if(Globals.specify) {
             removeTestFromSpecifyGroup(e.target.parentNode);
@@ -250,3 +252,5 @@ document.getElementById("specify_user_count").addEventListener("click", function
         Globals.randomize = false;
     }
 }, false)
+
+
