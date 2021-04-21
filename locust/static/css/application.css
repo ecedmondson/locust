@@ -195,6 +195,8 @@ table.stats {
 
 .specify-test {
   color: #EDDD75;
+  max-width: 94%;
+  min-width: 89%;
 }
 
 .test-input {

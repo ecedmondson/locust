@@ -120,7 +120,7 @@ function getInputsForAllTestsSelected() {
         var user_count_text = child.attributes.id.textContent.replace("_selected", "_user_count");
         var label = generateLabelElement(
             user_count_text,
-            "title",
+            "title specify-test",
             child.innerText,
             );
         new_inputs.push(label);
@@ -128,7 +128,7 @@ function getInputsForAllTestsSelected() {
             "test",
             user_count_text,
             user_count_text,
-            "val test-input specify-test",
+            "val test-input",
             ""
         );
         new_inputs.push(input);
