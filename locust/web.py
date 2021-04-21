@@ -46,6 +46,7 @@ def get_user_class_from_select_value(test_client_value, user_classes_list):
 
 
 def parse_data(form, user_classes):
+    data = {}
     test_names = [x.strip() for x in form["tests-selected-hidden"].split(",")]
     data["selected_test_name_class_dict"] = {
         test_name: test_dict["class"]
