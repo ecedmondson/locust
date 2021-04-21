@@ -95,14 +95,8 @@ function generateTotalNumbersInput() {
 function removeAllUserNumberInputs(container_element) {
     var children = container_element.children;
     var child_len = children.length - 1;
-    console.log(children);
     for(var i = child_len; i >= 0; i--) {
-        console.log(children.length);
-        console.log(child_len);
-        console.log(i);
-        console.log('child');
         var child = children[i];
-        console.log(child);
         container_element.removeChild(child);
     }
 }
@@ -110,7 +104,6 @@ function removeAllUserNumberInputs(container_element) {
 function setTotalUserNumberInputForRandomize() {
     var input_container = document.getElementById("user-num-input-container");
     removeAllUserNumberInputs(input_container);
-    return;
     var new_label = generateTotalNumbersLabel();
     var new_input = generateTotalNumbersInput();
     input_container.appendChild(new_label);
@@ -151,7 +144,6 @@ function getInputsForAllTestsSelected() {
 function setUserNumberInputForSpecify() {
     var input_container = document.getElementById("user-num-input-container");
     removeAllUserNumberInputs(input_container);
-    return;
     var new_inputs = getInputsForAllTestsSelected();
     var new_inputs_len = new_inputs.length
     for(var i = 0; i < new_inputs_len; i++) {
