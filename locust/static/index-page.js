@@ -1,3 +1,7 @@
+var Globals = {};
+Globals.randomize = true;
+Globals.specify = false;
+
 function removeNoneTextFromTestsSelected() {
     var tests_selected_artificial_list = document.getElementById("tests_selected_text_area");
     if(tests_selected_artificial_list.textContent == "None Selected") {
@@ -114,7 +118,7 @@ function getInputsForAllTestsSelected() {
     var new_inputs = [getSpecifyTitleElement()];
     for(var i = 0; i < tests_selected.length; i++) {
         var child = tests_selected[i];
-        var user_count_text = child.attributes.id.replace("_selected", "_user_count");
+        var user_count_text = child.attributes.id.textContent.replace("_selected", "_user_count");
         var label = generateLabelElement(
             user_count_text,
             "title",
@@ -164,15 +168,19 @@ document.getElementById("randomize_user_count").addEventListener("click", functi
     console.log("randomize click");
     console.log(e);
     console.log(e.target.checked);
-    if(e.target.checked) {
+    if(e.target.checked && !Globals.randomize) {
         setTotalUserNumberInputForRandomize();
+        Globals.randomize = true;
+        Globals.specify = false;
     }
 }, false)
 
 document.getElementById("specify_user_count").addEventListener("click", function(e) {
     console.log('specify click');
     console.log(e);
-    if(e.target.checked) {
+    if(e.target.checked && !Globals.specify) {
         setUserNumberInputForSpecify();
+        Globals.specify = true;
+        Globals.randomize = false;
     }
 }, false)
