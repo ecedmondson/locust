@@ -178,10 +178,13 @@ function addTestToSpecifyGroup() {
 }
 
 function ifIsInputElement(child, original_ele) {
-    var name_is = child.attributes.name;
-    var child_text = child.attributes.name.textContent.replace("_user_count", "");
-    var original_text = original_ele.attributes.id.textContent.replace("_selected", "");
-    var are_equal = child_text == original_text;
+    var valid = child.attributes.name;
+    if(name_is) {
+        var child_text = child.attributes.name.textContent.replace("_user_count", "");
+        var original_text = original_ele.attributes.id.textContent.replace("_selected", "");
+        var are_equal = child_text == original_text
+        var valid = valid && are_equal;
+    }
     return name_is && are_equal;
 }
 
