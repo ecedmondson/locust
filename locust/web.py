@@ -54,10 +54,10 @@ def parse_data(form, user_classes):
         for test_dict in user_classes
         if test_dict["client_name"] == test_name
     }
-    data["spawn_rate"] = form["spawn_rate"]
+    data["spawn_rate"] = int(form["spawn_rate"])
     if form["select_user_count"] == "randomize":
         data["method"] = "randomize"
-        data["total_users"] = form["user_count"]
+        data["total_users"] = int(form["user_count"])
     if form["select_user_count"] == "specify":
         data["method"] = "specify"
         data["user_counts"] = {"total": 0, "per_user": {}}
