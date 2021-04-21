@@ -92,7 +92,7 @@ function removeAllUserNumberInputs(container_element) {
     var children = container_element.children
     for(var i = children.length - 1; i < children.length; i--) {
         var child = children[i];
-        input_container.removeChild(child);
+        container_element.removeChild(child);
     }
 }
 
