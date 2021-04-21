@@ -106,6 +106,7 @@ function removeAllUserNumberInputs(container_element) {
 function setTotalUserNumberInputForRandomize() {
     var input_container = document.getElementById("user-num-input-container");
     removeAllUserNumberInputs(input_container);
+    return;
     var new_label = generateTotalNumbersLabel();
     var new_input = generateTotalNumbersInput();
     input_container.appendChild(new_label);
@@ -124,7 +125,7 @@ function getInputsForAllTestsSelected() {
             "title",
             child.innerText,
             );
-        new_inputs.push(label);
+        
         var input = generateInputElement(
             "test",
             user_count_text,
@@ -133,6 +134,7 @@ function getInputsForAllTestsSelected() {
             ""
         );
         new_inputs.push(input);
+        new_inputs.push(label);
         // <label for="event_details_get_user_count" class="title">Number of 'Event Details GET' Users: </label>
         // <input type="text" name="event_details_get_user_count" id="event_details_get_user_count" class="val test-input" value="{{ num_users or "" }}"/><br>
         // <label for="live_booth_attendee_user_count" class="title">Number of 'Live Booth Attendee' Users: </label>
@@ -144,6 +146,7 @@ function getInputsForAllTestsSelected() {
 function setUserNumberInputForSpecify() {
     var input_container = document.getElementById("user-num-input-container");
     removeAllUserNumberInputs(input_container);
+    return;
     var new_inputs = getInputsForAllTestsSelected();
     for(var i = 0; i < new_inputs.length; i++) {
         input_container.appendChild(new_inputs[i]);
@@ -165,9 +168,6 @@ document.addEventListener("click", function(e) {
 }, false);
 
 document.getElementById("randomize_user_count").addEventListener("click", function(e) {
-    console.log("randomize click");
-    console.log(e);
-    console.log(e.target.checked);
     if(e.target.checked && !Globals.randomize) {
         setTotalUserNumberInputForRandomize();
         Globals.randomize = true;
@@ -176,8 +176,6 @@ document.getElementById("randomize_user_count").addEventListener("click", functi
 }, false)
 
 document.getElementById("specify_user_count").addEventListener("click", function(e) {
-    console.log('specify click');
-    console.log(e);
     if(e.target.checked && !Globals.specify) {
         setUserNumberInputForSpecify();
         Globals.specify = true;
