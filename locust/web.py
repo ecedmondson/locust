@@ -164,6 +164,8 @@ class WebUI:
                 return jsonify(
                     {"success": True, "message": "Swarming started using shape class", "host": environment.host}
                 )
+            print(request.form)
+            raise Exception('woah!')
             user_count = int(request.form["user_count"])
             spawn_rate = float(request.form["spawn_rate"])
             environment.runner.user_class_test_selection = [
@@ -172,8 +174,7 @@ class WebUI:
                     parse_user_class_dict_from_environment(environment.runner.user_classes),
                 )
             ]
-            specify_user_count = "specify_user_count" in request.form
-            print(specify_user_count)
+            
 
             environment.runner.start(user_count, spawn_rate)  # , specify_user_count=specify_user_count)
             return jsonify({"success": True, "message": "Swarming started", "host": environment.host})
