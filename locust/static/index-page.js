@@ -164,13 +164,14 @@ document.getElementById("randomize_user_count").addEventListener("click", functi
     console.log("randomize click");
     console.log(e);
     console.log(e.target.checked);
+    setTotalUserNumberInputForRandomize();
 }, false)
 
 document.getElementById("specify_user_count").addEventListener("click", function(e) {
     console.log('specify click');
     console.log(e);
     console.log(e.target.checked);
-
+    setUserNumberInputForSpecify();
 }, false)
 
 document.getElementById("randomize_user_count").addEventListener("load", function(e) {
