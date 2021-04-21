@@ -103,13 +103,18 @@ class Runner:
     @property
     def stats(self) -> RequestStats:
         print("stats entries")
-        print(self.environment.stats.entries)
+        for k, v in self.environment.stats.entries.items():
+            print(f"Endpoint: {k}")
+            print(v)
+            print(dir(v))
         print("stats errors")
-        print(self.environment.stats.errors)
+        for k, v in self.environment.stats.errors.items():
+            print(f"What is this? {k}")
+            print(v)
+            print(dir(v))
         print("stats history")
-        print(self.environment.stats.history)
-        print("stats total")
-        print(self.environment.stats.total)
+        from pprint import pprint
+        pprint(self.environment.stats.history)
         return self.environment.stats
 
     @property
