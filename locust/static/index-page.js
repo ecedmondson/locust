@@ -111,12 +111,24 @@ function getInputsForAllTestsSelected() {
     var new_inputs = [getSpecifyTitleElement()];
     for(var i = 0; i < tests_selected.length; i++) {
         var child = tests_selected[i];
-        var label = generateLabelElement(child.innerText)
+        var user_count_text = child.attributes.id.replace("_selected", "_user_count");
+        var label = generateLabelElement(
+            user_count_text,
+            "title",
+            child.innerText,
+            );
+        # type_text, name_text, id_text, class_text, value_text
+        var input = generateInputElement(
+            "test",
+            user_count_text,
+            user_count_text,
+            "val test-input",
+            ""
+        )
         // <label for="event_details_get_user_count" class="title">Number of 'Event Details GET' Users: </label>
         // <input type="text" name="event_details_get_user_count" id="event_details_get_user_count" class="val test-input" value="{{ num_users or "" }}"/><br>
         // <label for="live_booth_attendee_user_count" class="title">Number of 'Live Booth Attendee' Users: </label>
         // <input type="text" name="live_booth_attendee_user_count" id="live_booth_attendee_user_count" class="val test-input" value="{{ num_users or "" }}"/><br>
-
     }
 }
 
