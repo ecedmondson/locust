@@ -160,6 +160,9 @@ function addTestToSpecifyGroup() {
     var options = document.getElementById("test_client").options;
     var selected_test = Array.from(options).filter(e => e.value == current_selection)[0];
     var input_container = document.getElementById("user-num-input-container");
+    if(input_container.children and input_container.children[0].textContent == "No tests selected :(") {
+        input_container.removeChild(input_container.chidlren[0]);
+    }
     var user_count_text = selected_test.attributes.value.textContent.concat("_user_count");
     var label = generateLabelElement(
         user_count_text,
@@ -179,13 +182,13 @@ function addTestToSpecifyGroup() {
 
 function ifIsInputElement(child, original_ele) {
     var valid = child.attributes.name;
-    if(name_is) {
+    if(valid) {
         var child_text = child.attributes.name.textContent.replace("_user_count", "");
         var original_text = original_ele.attributes.id.textContent.replace("_selected", "");
         var are_equal = child_text == original_text
         var valid = valid && are_equal;
     }
-    return name_is && are_equal;
+    return valid;
 }
 
 
