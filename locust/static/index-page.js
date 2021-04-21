@@ -160,7 +160,7 @@ function addTestToSpecifyGroup() {
     var options = document.getElementById("test_client").options;
     var selected_test = Array.from(options).filter(e => e.value == current_selection)[0];
     var input_container = document.getElementById("user-num-input-container");
-    if(input_container.children && input_container.children[0].textContent == "No tests selected :(") {
+    if(input_container.children.length > 0 && input_container.children[0].textContent == "No tests selected :(") {
         input_container.removeChild(input_container.chidlren[0]);
     }
     var user_count_text = selected_test.attributes.value.textContent.concat("_user_count");
@@ -205,7 +205,7 @@ function removeTestFromSpecifyGroup(ele) {
         console.log(children[i]);
         console.log(ele);
         if(ifIsInputElement(children[i], ele)) {
-            removals.push(chilren[i]);
+            removals.push(children[i]);
         }
     }
 
