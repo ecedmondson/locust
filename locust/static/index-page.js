@@ -191,6 +191,13 @@ function ifIsInputElement(child, original_ele) {
     return valid;
 }
 
+function getTests() {
+    var final_test_set = document.getElementById('tests_selected_text_area').children;
+    var test_names = [];
+    for(var i = 0; i < final_test_set.length; i++) {
+        test_names.push(final_test_set[i]);
+    }
+}
 
 function removeTestFromSpecifyGroup(ele) {
     var input_container = document.getElementById("user-num-input-container");
