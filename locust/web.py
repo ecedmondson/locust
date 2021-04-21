@@ -45,6 +45,7 @@ def get_user_class_from_select_value(test_client_value, user_classes_list):
     return list(filter(lambda x: x["value"] == test_client_value, user_classes_list))[0]["class"]
 
 def parse_data(form, user_classes):
+    print(form)
     data = {}
     print(",".split(form['tests-selected-hidden']))
     data['test_names'] = [x.strip() for x in ",".split(form['tests-selected-hidden'])]
@@ -189,6 +190,7 @@ class WebUI:
                     {"success": True, "message": "Swarming started using shape class", "host": environment.host}
                 )
             user_classes = parse_user_class_dict_from_environment(environment.runner.user_classes)
+            print(request.form)
             data = parse_data(request.form, user_classes)
             from pprint import pprint
             print(data)
