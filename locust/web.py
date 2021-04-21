@@ -49,7 +49,7 @@ def parse_data(form, user_classes):
     test_names = [x.strip() for x in form["tests-selected-hidden"].split(",")]
     data["selected_test_name_class_dict"] = {
         test_name: test_dict["class"]
-        for test_name in data["test_names"]
+        for test_name in test_names
         for test_dict in user_classes
         if test_dict["client_name"] == test_name
     }
