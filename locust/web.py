@@ -44,6 +44,30 @@ def parse_user_class_dict_from_environment(user_classes):
 def get_user_class_from_select_value(test_client_value, user_classes_list):
     return list(filter(lambda x: x["value"] == test_client_value, user_classes_list))[0]["class"]
 
+def parse_data(form, user_classes):
+    data = {}
+    data['test_names'] = [x.strip() for x in ",".split(form['tests-selected-hidden'])]
+    print(data)
+    print(user_classes)
+    data['test_dicts_by_ui_name'] = {test_name: test_dict for test_name in data['test_names'] for test_dict in user_classes if test_dict["client_namee"] == test_name}
+    print(data)
+    print()
+    if form['select_user_count'] == "randomize":
+        data['method'] = 'randomize'
+        data['total_users'] = form['user_count']
+        data['spawn_rate'] = form['spawn_rate']
+    if form['select_user_count']:
+        data['method'] = 'specify'
+        data['spawn_rate'] = form['spawn_rate']
+        data['user_counts'] = {"total": 0, "per_user": {}}
+        for k, v in form.items():
+            per_user_list = data['user_counts']['per_user']
+            total = data['user_counts']['total']
+            if not k.startswith("select_user_") and k.endwith("_user_count"):
+                total += int(v)
+                per_user_list[k] = int(v)
+    return data
+
 
 class WebUI:
     """
@@ -153,7 +177,6 @@ class WebUI:
         @self.auth_required_if_enabled
         def swarm():
             assert request.method == "POST"
-            print(request.form)
             if request.form.get("host"):
                 # Replace < > to guard against XSS
                 environment.host = str(request.form["host"]).replace("<", "").replace(">", "")
@@ -164,14 +187,17 @@ class WebUI:
                 return jsonify(
                     {"success": True, "message": "Swarming started using shape class", "host": environment.host}
                 )
-            print(request.form)
+            user_classes = parse_user_class_dict_from_environment(environment.runner.user_classes)
+            data = parse_data(request.form, user_classes)
+            from pprint import pprint
+            print(data)
             raise Exception('woah!')
             user_count = int(request.form["user_count"])
             spawn_rate = float(request.form["spawn_rate"])
             environment.runner.user_class_test_selection = [
                 get_user_class_from_select_value(
                     request.form["test_client"],
-                    parse_user_class_dict_from_environment(environment.runner.user_classes),
+                    user_classes,
                 )
             ]
             
