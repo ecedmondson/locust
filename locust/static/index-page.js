@@ -177,7 +177,7 @@ function addTestToSpecifyGroup() {
     current_selection.appendChild(input);
 }
 
-ifIsInputElement(child, original_ele) {
+function ifIsInputElement(child, original_ele) {
     var name_is = child.attributes.name;
     var child_text = child.attributes.name.textContent.replace("_user_count", "");
     var original_text = original_ele.attributes.id.textContent.replace("_selected", "");
