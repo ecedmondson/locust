@@ -183,6 +183,7 @@ ifIsInputElement(child, original_ele) {
     var original_text = original_ele.attributes.id.textContent.replace("_selected", "");
     var are_equal = child_text == original_text;
     return name_is && are_equal;
+}
 
 
 function removeTestFromSpecifyGroup(ele) {
