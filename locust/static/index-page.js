@@ -161,6 +161,8 @@ function addTestToSpecifyGroup() {
     var selected_test = Array.from(options).filter(e => e.value == current_selection)[0];
     var input_container = document.getElementById("user-num-input-container");
     var user_count_text = selected_test.attributes.value.textContent.concat("_user_count");
+    console.log(input_container);
+    console.log(input_container.children);
     if(input_container.children.length > 0 && input_container.children[0].textContent.includes("No tests selected :(")) {
         input_container.removeChild(input_container.chidlren[0]);
     }
@@ -202,8 +204,6 @@ function removeTestFromSpecifyGroup(ele) {
             removals.push(children[i]);
         }
         // Identifies the input element
-        console.log(children[i]);
-        console.log(ele);
         if(ifIsInputElement(children[i], ele)) {
             removals.push(children[i]);
         }
