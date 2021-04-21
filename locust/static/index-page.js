@@ -143,7 +143,9 @@ function setUserNumberInputForSpecify() {
     }
 }
 
-
+function ifIdAttrIsRemoval(ele) {
+    return ele.attributes.id && ele.attributes.id.textContent.includes("_removal");
+}
 
 document.addEventListener("click", function(e) {
     // if(e.target.getAttribute("id") == "specify_user_count") {
@@ -153,7 +155,7 @@ document.addEventListener("click", function(e) {
         handleClickofAddTestButton();
     }
 
-    if(e.target.getAttribute("id").textContent.includes("_removal")) {
+    if(ifIdAttrIsRemoval(e.target)) {
         handleClickofRemoveTestButton(e.target.parentNode);
     }
 }, false);
