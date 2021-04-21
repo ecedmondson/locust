@@ -49,7 +49,7 @@ def parse_data(form, user_classes):
     data = {}
     selected_tests = form['tests-selected-hidden']
     print(selected_tests)
-    print(type(selected_tests)
+    print(type(selected_tests))
     print(",".split(str(selected_tests)))
     print()
     data['test_names'] = [x.strip() for x in ",".split(str(selected_tests))]
