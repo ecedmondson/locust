@@ -102,8 +102,14 @@ class Runner:
 
     @property
     def stats(self) -> RequestStats:
-        print("stats")
-        print(self.environment.stats)
+        print("stats entries")
+        print(self.environment.stats.entries)
+        print("stats errors")
+        print(self.environment.stats.errors)
+        print("stats history")
+        print(self.environment.stats.history)
+        print("stats total")
+        print(self.environment.stats.total)
         return self.environment.stats
 
     @property
