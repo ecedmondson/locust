@@ -85,7 +85,7 @@ function getSpecifyTitleElement() {
 }
 
 function generateTotalNumbersLabel() {
-    return generateLabelElement("user_count", "title", "Total Number of Users to Simulate: ");
+    return generateLabelElement("user_count", "title specify-test", "Total Number of Users to Simulate: ");
 }
 
 function generateTotalNumbersInput() {
@@ -110,7 +110,7 @@ function setTotalUserNumberInputForRandomize() {
     input_container.appendChild(new_input);
 }
 
-function getInputsForAllTestsSelected() {
+function createInputsForAllTestsSelected() {
     var tests_selected_container = document.getElementById('tests_selected_text_area');
     var tests_selected = tests_selected_container.children;
     var tests_selected_len = tests_selected.length;
@@ -133,13 +133,18 @@ function getInputsForAllTestsSelected() {
         );
         new_inputs.push(input);
     }
+    if(new_inputs.length == 1) {
+        var no_sel = document.createElement("div");
+        no_sel.innerText = "None";
+        new_inputs.push(no_sel);
+    }
     return new_inputs;
 }
 
 function setUserNumberInputForSpecify() {
     var input_container = document.getElementById("user-num-input-container");
     removeAllUserNumberInputs(input_container);
-    var new_inputs = getInputsForAllTestsSelected();
+    var new_inputs = createInputsForAllTestsSelected();
     var new_inputs_len = new_inputs.length
     for(var i = 0; i < new_inputs_len; i++) {
         input_container.appendChild(new_inputs[i]);
@@ -150,12 +155,57 @@ function ifIdAttrIsRemoval(ele) {
     return ele.attributes.id && ele.attributes.id.textContent.includes("_removal");
 }
 
+function addTestToSpecifyGroup() {
+    var current_selection = document.getElementById("test_client").value;
+    var options = document.getElementById("test_client").options;
+    var selected_test = Array.from(options).filter(e => e.value == current_selection)[0];
+    var input_container = document.getElementById("user-num-input-container");
+    var user_count_text = child.attributes.value.textContent.concat("_user_count");
+    var label = generateLabelElement(
+        user_count_text,
+        "title specify-test",
+        selected_test.innerText,
+        );
+    current_selection.appendChild(label);
+    var input = generateInputElement(
+        "test",
+        user_count_text,
+        user_count_text,
+        "val test-input",
+        ""
+    );
+    current_selection.appendChild(input);
+}
+
+function removeTestFromSpecifyGroup(ele) {
+    var input_container = document.getElementById("user-num-input-container");
+    var children = input_container.children;
+    var removals = [];
+    for(var i = 0; i < children.length; i++) {
+        // Identifies the label element
+        if(children[i].textContent == ele.textContent) {
+            removals.push(children[i]);
+        }
+        // Identifies the input element
+        if(children[i].name.textContent.replace('_user_count', "") == ele.attributes.id.textContent.replace("_selected"), "") {
+            removals.push(chilren[i]);
+        }
+    }
+
+}
+
 document.addEventListener("click", function(e) {
     if(e.target.getAttribute("id") == "add_test_client_button") {
+        if(Globals.specify) {
+            addTestToSpecifyGroup();
+        }
         handleClickofAddTestButton();
     }
 
     if(ifIdAttrIsRemoval(e.target)) {
+        if(Globals.specify) {
+            removeTestFromSpecifyGroup(e.target.parentNode);
+        }
         handleClickofRemoveTestButton(e.target.parentNode);
     }
 }, false);
