@@ -193,6 +193,10 @@ table.stats {
   padding-top: .5em;
 }
 
+.specify-test {
+  color: #EDDD75;
+}
+
 .test-input {
   max-width: 95%;
   min-width: 88%;

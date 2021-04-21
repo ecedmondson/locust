@@ -128,7 +128,7 @@ function getInputsForAllTestsSelected() {
             "test",
             user_count_text,
             user_count_text,
-            "val test-input",
+            "val test-input specify-test",
             ""
         );
         new_inputs.push(input);
