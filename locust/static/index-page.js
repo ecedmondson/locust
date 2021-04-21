@@ -166,7 +166,7 @@ function addTestToSpecifyGroup() {
         "title specify-test",
         selected_test.innerText,
         );
-    current_selection.appendChild(label);
+    input_container.appendChild(label);
     var input = generateInputElement(
         "test",
         user_count_text,
@@ -174,7 +174,7 @@ function addTestToSpecifyGroup() {
         "val test-input",
         ""
     );
-    current_selection.appendChild(input);
+    input_container.appendChild(input);
 }
 
 function ifIsInputElement(child, original_ele) {
