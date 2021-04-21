@@ -75,6 +75,9 @@ class Runner:
             self.stats.log_request(request_type, name, response_time, response_length)
 
         def on_request_failure(request_type, name, response_time, response_length, exception, **kwargs):
+            print("on request failure"):
+            print(kwargs)
+            print()
             self.stats.log_request(request_type, name, response_time, response_length)
             self.stats.log_error(request_type, name, exception)
 
@@ -106,12 +109,22 @@ class Runner:
         for k, v in self.environment.stats.entries.items():
             print(f"Endpoint: {k}")
             print(v)
+            print(v.name)
+            print(v.method)
+            print(v.num_requests)
+            print(v.num_failures)
+            print(v.num_reqs_per_second)
+            print(v.)
+            print(v.)
+            print(v)
             print(dir(v))
         print("stats errors")
         for k, v in self.environment.stats.errors.items():
             print(f"What is this? {k}")
             print(v)
-            print(dir(v))
+            print(v.name)
+            print(v.method)
+            print(v.error)
         print("stats history")
         from pprint import pprint
         pprint(self.environment.stats.history)

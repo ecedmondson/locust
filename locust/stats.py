@@ -274,6 +274,7 @@ class StatsEntry:
         self.response_times = {}
         self.min_response_time = None
         self.max_response_time = 0
+        self.all_req_timestamps = []
         self.last_request_timestamp = None
         self.num_reqs_per_sec = {}
         self.num_fail_per_sec = {}
@@ -301,6 +302,7 @@ class StatsEntry:
     def _log_time_of_request(self, current_time):
         t = int(current_time)
         self.num_reqs_per_sec[t] = self.num_reqs_per_sec.setdefault(t, 0) + 1
+        self.all_req_timestamps.append(current_time)
         self.last_request_timestamp = current_time
 
     def _log_response_time(self, response_time):
