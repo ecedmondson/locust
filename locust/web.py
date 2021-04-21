@@ -54,13 +54,12 @@ def parse_data(form, user_classes):
         for test_dict in user_classes
         if test_dict["client_name"] == test_name
     }
+    data["spawn_rate"] = form["spawn_rate"]
     if form["select_user_count"] == "randomize":
         data["method"] = "randomize"
         data["total_users"] = form["user_count"]
-        data["spawn_rate"] = form["spawn_rate"]
-    if form["select_user_count"]:
+    if form["select_user_count"] == "specify":
         data["method"] = "specify"
-        data["spawn_rate"] = form["spawn_rate"]
         data["user_counts"] = {"total": 0, "per_user": {}}
         for k, v in form.items():
             per_user_list = data["user_counts"]["per_user"]
@@ -184,26 +183,16 @@ class WebUI:
                 environment.host = str(request.form["host"]).replace("<", "").replace(">", "")
 
             if environment.shape_class:
-                print("shapw class called")
                 environment.runner.start_shape()
                 return jsonify(
                     {"success": True, "message": "Swarming started using shape class", "host": environment.host}
                 )
             user_classes = parse_user_class_dict_from_environment(environment.runner.user_classes)
-            print(request.form)
             data = parse_data(request.form, user_classes)
-            from pprint import pprint
-
-            print(data)
-            raise Exception("woah!")
-            user_count = int(request.form["user_count"])
-            spawn_rate = float(request.form["spawn_rate"])
-            environment.runner.user_class_test_selection = [
-                get_user_class_from_select_value(
-                    request.form["test_client"],
-                    user_classes,
-                )
-            ]
+            pprint(data)
+            raise Exception('woah!')
+            environment.runner.user_class_test_selection = list(data['selected_test_name_class_dict'].values())
+            environment.runner.parse_form_start_test(data)
 
             environment.runner.start(user_count, spawn_rate)  # , specify_user_count=specify_user_count)
             return jsonify({"success": True, "message": "Swarming started", "host": environment.host})

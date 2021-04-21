@@ -206,6 +206,7 @@ class Runner:
                 occurrence_count[user_class.__name__] += 1
                 new_user = user_class(self.environment)
                 new_user.start(self.user_greenlets)
+                logging.info(f"Spawning new {user_class.select_name!r}")
                 if len(self.user_greenlets) % 10 == 0:
                     logger.debug("%i users spawned" % len(self.user_greenlets))
                 if bucket:
@@ -326,6 +327,19 @@ class Runner:
         else:
             self.spawn_rate = spawn_rate
             self.spawn_users(user_count, spawn_rate=spawn_rate, wait=wait)
+
+    def start_specified_user_count_test(self, user_count_dict, spawn_rate):
+        pass
+
+    def parse_form_start_test(self,  parsed_data):
+        if parsed_data['method'] == "randomize":
+            # This isn't a good method name now that there is more than one way to start,
+            # but it is the original locust package's start method and it's remaining
+            # in order to retrofit.
+            return self.start(parsed_data['total_users'], parsed_data['spawn_rate'])
+        if parsed_data['method'] == "specify":
+            return self.start_specified_user_count_test(parsed_data['specific_user_counts'], parsed_data['spawn_rate'])
+
 
     def start_shape(self):
         if self.shape_greenlet:
