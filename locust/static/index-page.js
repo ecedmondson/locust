@@ -198,7 +198,7 @@ function removeTestFromSpecifyGroup(ele) {
         // Identifies the input element
         console.log(children[i]);
         console.log(ele);
-        if(children[i].name.textContent.replace('_user_count', "") == ele.attributes.id.textContent.replace("_selected"), "") {
+        if(ifIsInputElement(children[i], ele)) {
             removals.push(chilren[i]);
         }
     }
