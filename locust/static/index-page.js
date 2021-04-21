@@ -135,7 +135,7 @@ function createInputsForAllTestsSelected() {
     }
     if(new_inputs.length == 1) {
         var no_sel = document.createElement("div");
-        no_sel.innerText = "None";
+        no_sel.innerText = "No tests selected :(";
         new_inputs.push(no_sel);
     }
     return new_inputs;
@@ -187,6 +187,8 @@ function removeTestFromSpecifyGroup(ele) {
             removals.push(children[i]);
         }
         // Identifies the input element
+        console.log(children[i]);
+        console.log(ele);
         if(children[i].name.textContent.replace('_user_count', "") == ele.attributes.id.textContent.replace("_selected"), "") {
             removals.push(chilren[i]);
         }
