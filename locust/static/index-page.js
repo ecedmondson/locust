@@ -117,19 +117,21 @@ function getInputsForAllTestsSelected() {
             "title",
             child.innerText,
             );
-        # type_text, name_text, id_text, class_text, value_text
+        new_inputs.push(label);
         var input = generateInputElement(
             "test",
             user_count_text,
             user_count_text,
             "val test-input",
             ""
-        )
+        );
+        new_inputs.push(input);
         // <label for="event_details_get_user_count" class="title">Number of 'Event Details GET' Users: </label>
         // <input type="text" name="event_details_get_user_count" id="event_details_get_user_count" class="val test-input" value="{{ num_users or "" }}"/><br>
         // <label for="live_booth_attendee_user_count" class="title">Number of 'Live Booth Attendee' Users: </label>
         // <input type="text" name="live_booth_attendee_user_count" id="live_booth_attendee_user_count" class="val test-input" value="{{ num_users or "" }}"/><br>
     }
+    return new_inputs;
 }
 
 function setUserNumberInputForSpecify() {
