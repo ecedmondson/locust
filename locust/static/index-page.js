@@ -165,7 +165,7 @@ function addTestToSpecifyGroup() {
     console.log(input_container);
     console.log(input_container.children);
     if(input_container.children.length == 2 && input_container.children[1].textContent.includes("No tests selected :(")) {
-        input_container.removeChild(input_container.chidlren[0]);
+        input_container.removeChild(input_container.children[1]);
     }
     var label = generateLabelElement(
         user_count_text,
