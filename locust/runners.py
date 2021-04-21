@@ -102,6 +102,8 @@ class Runner:
 
     @property
     def stats(self) -> RequestStats:
+        print("stats")
+        print(self.environment.stats)
         return self.environment.stats
 
     @property

@@ -152,6 +152,8 @@ class RequestStats:
         Retrieve a StatsEntry instance by name and method
         """
         entry = self.entries.get((name, method))
+        print("entries")
+        print(self.entries)
         if not entry:
             entry = StatsEntry(self, name, method, use_response_times_cache=self.use_response_times_cache)
             self.entries[(name, method)] = entry
