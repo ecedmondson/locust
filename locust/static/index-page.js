@@ -166,7 +166,7 @@ document.addEventListener("click", function(e) {
 }, false);
 
 document.getElementById("randomize_user_count").addEventListener("click", function(e) {
-    if(e.target.checked && !Globals.randomize) {
+    if(e.target.checked && Globals.specify) {
         setTotalUserNumberInputForRandomize();
         Globals.randomize = true;
         Globals.specify = false;
@@ -174,7 +174,7 @@ document.getElementById("randomize_user_count").addEventListener("click", functi
 }, false)
 
 document.getElementById("specify_user_count").addEventListener("click", function(e) {
-    if(e.target.checked && !Globals.specify) {
+    if(e.target.checked && Globals.randomize) {
         setUserNumberInputForSpecify();
         Globals.specify = true;
         Globals.randomize = false;
