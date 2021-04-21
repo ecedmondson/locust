@@ -105,30 +105,18 @@ class Runner:
 
     @property
     def stats(self) -> RequestStats:
-        from pprint import pprint
-        print("stats entries")
-        for k, v in self.environment.stats.entries.items():
-            print(f"Endpoint: {k}")
-            print(v.all_req_timestamps)
-            # StatsEntry.name -> endpoint
-            # StatsEntry.method -> HTTP method (i.e. GET, POST)
-            # StatsEntry.num_requests -> total number_of_requests for this endpoint and method
-            # StatsEntry.num_failures -> total number of request failrues for this endpoint and method
-            # print(v.num_reqs_per_second)
-            pprint(dir(v))
-            print()
-        print("stats errors")
-        for k, v in self.environment.stats.errors.items():
-            print(f"What is this? {k}")
-            print(v)
-            # StatsError.name -> endpoint
-            # StatsError.method -> HttmpMethod
-            # StatsError.error -> particular error logged with this request? what happens it if is many? Is that related to the sha?
-            print(v.occurrences)
-            pprint(dir(v))
-            print()
-        print("stats history")
-        pprint(self.environment.stats.history)
+        # environment.stats.entries -> {k:v, etc.} where k is the endpoint and v is StatsEntry object
+        # StatsEntry.all_req_timestamps -> added by me, timestamps of all reqs for this endpoint
+        # StatsEntry.name -> endpoint
+        # StatsEntry.method -> HTTP method (i.e. GET, POST)
+        # StatsEntry.num_requests -> total number_of_requests for this endpoint and method
+        # StatsEntry.num_failures -> total number of request failrues for this endpoint and method
+        # print(v.num_reqs_per_second)
+        # enviroment.stats.errors -> {k:v, etc.} where K is the md5 hash of method, name, error and v is StatsError
+        # StatsError.name -> endpoint
+        # StatsError.method -> HttmpMethod
+        # StatsError.error -> particular error logged with this method of this request? md5 seems to indicate so
+        # StatsError.occurrences -> occurence of failures. Again, not sure if it is specific to the error or specific to the request
         return self.environment.stats
 
     @property
