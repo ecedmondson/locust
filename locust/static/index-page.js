@@ -110,7 +110,7 @@ function setTotalUserNumberInputForRandomize() {
 
 function getInputsForAllTestsSelected() {
     var tests_selected_container = document.getElementById('tests_selected_text_area');
-    var tests_selected = tests_selected.children;
+    var tests_selected = tests_selected_container.children;
     var new_inputs = [getSpecifyTitleElement()];
     for(var i = 0; i < tests_selected.length; i++) {
         var child = tests_selected[i];
@@ -151,9 +151,6 @@ function ifIdAttrIsRemoval(ele) {
 }
 
 document.addEventListener("click", function(e) {
-    // if(e.target.getAttribute("id") == "specify_user_count") {
-    //   #selected_users = document.getElementsByTagName()
-    // }
     if(e.target.getAttribute("id") == "add_test_client_button") {
         handleClickofAddTestButton();
     }
@@ -167,24 +164,15 @@ document.getElementById("randomize_user_count").addEventListener("click", functi
     console.log("randomize click");
     console.log(e);
     console.log(e.target.checked);
-    setTotalUserNumberInputForRandomize();
+    if(e.target.checked) {
+        setTotalUserNumberInputForRandomize();
+    }
 }, false)
 
 document.getElementById("specify_user_count").addEventListener("click", function(e) {
     console.log('specify click');
     console.log(e);
-    console.log(e.target.checked);
-    setUserNumberInputForSpecify();
-}, false)
-
-document.getElementById("randomize_user_count").addEventListener("load", function(e) {
-    console.log('randomize load');
-    console.log(e);
-    console.log(e.target.checked);
-}, false)
-
-document.getElementById("specify_user_count").addEventListener("load", function(e) {
-    console.log('specify load');
-    console.log(e);
-    console.log(e.taret.checked);
+    if(e.target.checked) {
+        setUserNumberInputForSpecify();
+    }
 }, false)
