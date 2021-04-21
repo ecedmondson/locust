@@ -160,7 +160,7 @@ function addTestToSpecifyGroup() {
     var options = document.getElementById("test_client").options;
     var selected_test = Array.from(options).filter(e => e.value == current_selection)[0];
     var input_container = document.getElementById("user-num-input-container");
-    var user_count_text = child.attributes.value.textContent.concat("_user_count");
+    var user_count_text = selected_test.attributes.value.textContent.concat("_user_count");
     var label = generateLabelElement(
         user_count_text,
         "title specify-test",
