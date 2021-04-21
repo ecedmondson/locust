@@ -109,11 +109,11 @@ class Runner:
         print("stats entries")
         for k, v in self.environment.stats.entries.items():
             print(f"Endpoint: {k}")
-            print(v)
-            print(v.name)
-            print(v.method)
-            print(v.num_requests)
-            print(v.num_failures)
+            print(v.all_req_timestamps)
+            # StatsEntry.name -> endpoint
+            # StatsEntry.method -> HTTP method (i.e. GET, POST)
+            # StatsEntry.num_requests -> total number_of_requests for this endpoint and method
+            # StatsEntry.num_failures -> total number of request failrues for this endpoint and method
             # print(v.num_reqs_per_second)
             pprint(dir(v))
             print()
@@ -121,9 +121,10 @@ class Runner:
         for k, v in self.environment.stats.errors.items():
             print(f"What is this? {k}")
             print(v)
-            print(v.name)
-            print(v.method)
-            print(v.error)
+            # StatsError.name -> endpoint
+            # StatsError.method -> HttmpMethod
+            # StatsError.error -> particular error logged with this request? what happens it if is many? Is that related to the sha?
+            print(v.occurrences)
             pprint(dir(v))
             print()
         print("stats history")
