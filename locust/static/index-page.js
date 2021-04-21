@@ -93,9 +93,10 @@ function generateTotalNumbersInput() {
 }
 
 function removeAllUserNumberInputs(container_element) {
-    var children = Array.from(container_element.children);
+    var children = container_element.children;
+    var child_len = children.length;
     console.log(children);
-    for(var i = 0; i < children.length; i++) {
+    for(var i = 0; i < child_len; i++) {
         console.log(children.length);
         console.log(i);
         console.log('child');
@@ -118,8 +119,9 @@ function setTotalUserNumberInputForRandomize() {
 function getInputsForAllTestsSelected() {
     var tests_selected_container = document.getElementById('tests_selected_text_area');
     var tests_selected = tests_selected_container.children;
+    var tests_selected_len = tests_selected.length;
     var new_inputs = [getSpecifyTitleElement()];
-    for(var i = 0; i < tests_selected.length; i++) {
+    for(var i = 0; i < tests_selected_len; i++) {
         var child = tests_selected[i];
         var user_count_text = child.attributes.id.textContent.replace("_selected", "_user_count");
         var label = generateLabelElement(
@@ -150,7 +152,8 @@ function setUserNumberInputForSpecify() {
     removeAllUserNumberInputs(input_container);
     return;
     var new_inputs = getInputsForAllTestsSelected();
-    for(var i = 0; i < new_inputs.length; i++) {
+    var new_inputs_len = new_inputs.length
+    for(var i = 0; i < new_inputs_len; i++) {
         input_container.appendChild(new_inputs[i]);
     }
 }
