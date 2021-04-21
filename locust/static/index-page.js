@@ -108,7 +108,7 @@ function setTotalUserNumberInputForRandomize() {
 function getInputsForAllTestsSelected() {
     var tests_selected_container = document.getElementById('tests_selected_text_area');
     var tests_selected = tests_selected.children;
-    var new_inputs [getSpecifyTitleElement()];
+    var new_inputs = [getSpecifyTitleElement()];
     for(var i = 0; i < tests_selected.length; i++) {
         var child = tests_selected[i];
         var label = generateLabelElement(child.innerText)
