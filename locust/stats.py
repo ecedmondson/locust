@@ -306,7 +306,7 @@ class StatsEntry:
         # print("in log")
         # print(kwargs)
         # print(response_time)
-        # t = int(current_time)
+        t = int(current_time)
         # print("locust builtin current time")
         # print(current_time)
         # print("response timestamp")
