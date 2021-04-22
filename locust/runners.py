@@ -436,7 +436,7 @@ class Runner:
         """
         self.stop()
         for listy in self.bevy_response_tracker.all_responses.values():
-            for r in listy:
+            for r in listy.responses:
                 print(r.name)
                 print(r.method)
                 print(r.error)
