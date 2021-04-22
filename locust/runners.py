@@ -46,7 +46,7 @@ greenlet_exception_handler = greenlet_exception_logger(logger)
 
 
 class BevyLocustResponse:
-    def __init__(self, method, name, response_time, content_length, elapsed, date, error=False):
+    def __init__(self, method, name, response_time, content_length, elapsed=None, date=None, error=False):
         self.method = method
         self.name = name
         self.response_time = response_time
@@ -114,8 +114,8 @@ class Runner:
                 name,
                 response_time,
                 response_length,
-                kwargs.get("elapsed", None),
-                kwargs.get("date", None),
+                elapsed=kwargs.get("elapsed", None),
+                date=kwargs.get("date", None),
             )
             self.bevy_response_tracker.add(response)
             self.stats.log_request(request_type, name, response_time, response_length)
@@ -126,8 +126,8 @@ class Runner:
                 name,
                 response_time,
                 response_length,
-                kwargs.get("elapsed", None),
-                kwargs.get("date", None),
+                elapsed=kwargs.get("elapsed", None),
+                date=kwargs.get("date", None),
                 error=True,
             )
             self.bevy_response_tracker.add(response)
