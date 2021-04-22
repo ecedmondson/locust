@@ -92,7 +92,6 @@ class Runner:
 
         # set up event listeners for recording requests
         def on_request_success(request_type, name, response_time, response_length):
-            print(args)
             print(request_type)
             #response = BevyLocustResponse()
             #self.bevy_response_tracker.add()
