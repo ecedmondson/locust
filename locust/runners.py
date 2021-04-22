@@ -55,6 +55,21 @@ class BevyLocustResponse:
         self.date = date
         self.error = error
 
+class BevyResponseList:
+    def __init__(self):
+        self.responses = []
+
+    def __getattr__(self, name):
+        """Get the named attribute from all items in the list."""
+        try:
+            return [getattr(x, name) for x in self.responses]
+        except AttributeError:
+            message = 'Attribute "{}" not present on all list items.'
+            raise AttributeError(message.format(name))
+
+    def append(self, item):
+        self.responses.append(item)
+
 
 class BevyResponseTracker:
     def __init__(self):
@@ -62,7 +77,7 @@ class BevyResponseTracker:
 
     def add(self, bevy_locust_response):
         if not bevy_locust_response.name in self.all_responses.keys():
-            self.all_responses[bevy_locust_response.name] = []
+            self.all_responses[bevy_locust_response.name] = BevyResponseList()
         self.all_responses[bevy_locust_response.name].append(bevy_locust_response)
 
 
@@ -420,7 +435,12 @@ class Runner:
         Stop any running load test and kill all greenlets for the runner
         """
         self.stop()
-        print(self.bevy_response_tracker.all_responses)
+        for listy in self.bevy_response_tracker.values():
+            for r in listy:
+                print(r.name)
+                print(r.method)
+                print(r.error)
+                print(r.response_time)
         self.greenlet.kill(block=True)
 
     def log_exception(self, node_id, msg, formatted_tb):
