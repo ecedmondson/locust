@@ -128,33 +128,33 @@ class RequestStats:
         return self.total.start_time
 
     def log_request(self, method, name, response_time, content_length, **kwargs):
-        print("in log request")
-        print(kwargs)
-        print(name)
-        print(response_time)
-        ()
+        # print("in log request")
+        # print(kwargs)
+        # print(name)
+        # print(response_time)
+        # ()
         self.total.log(response_time, content_length, **kwargs)
         x = self.get(name, method)
-        print("getting by name and method")
-        print(x)
-        print(dir(x))
-        print(type(x))
-        print()
+        # print("getting by name and method")
+        # print(x)
+        # print(dir(x))
+        # print(type(x))
+        # print()
         self.get(name, method).log(response_time, content_length, **kwargs)
 
     def log_error(self, method, name, error, **kwargs):
-        print("in log error")
-        print(kwargs)
-        print(name)
-        print(error)
-        print()
+        # print("in log error")
+        # print(kwargs)
+        # print(name)
+        # print(error)
+        # print()
         self.total.log_error(error, **kwargs)
         x = self.get(name, method)
-        print("getting by name and method")
-        print(x)
-        print(dir(x))
-        print(type(x))
-        print()
+        # print("getting by name and method")
+        # print(x)
+        # print(dir(x))
+        # print(type(x))
+        # print()
         self.get(name, method).log_error(error, **kwargs)
 
         # store error in errors dict
@@ -215,8 +215,6 @@ class StatsEntry:
 
     method = None
     """ Method (GET, POST, PUT, etc.) """
-
-    error = None
 
     num_requests = None
     """ The number of requests made """
@@ -286,6 +284,7 @@ class StatsEntry:
     def reset(self):
         self.start_time = time.time()
         self.num_requests = 0
+        self.num_errors = 0
         self.num_none_requests = 0
         self.num_failures = 0
         self.total_response_time = 0
@@ -303,20 +302,32 @@ class StatsEntry:
 
     def log(self, response_time, content_length, **kwargs):
         # get the time
-        print("in log")
-        print(kwargs)
-        print(response_time)
-        print()
         current_time = time.time()
-        t = int(current_time)
+        # print("in log")
+        # print(kwargs)
+        # print(response_time)
+        # t = int(current_time)
+        # print("locust builtin current time")
+        # print(current_time)
+        # print("response timestamp")
+        # print(kwargs.get("date", None))
+        # print()
 
         if self.use_response_times_cache and self.last_request_timestamp and t > int(self.last_request_timestamp):
             # see if we shall make a copy of the response_times dict and store in the cache
             self._cache_response_times(t - 1)
 
         self.num_requests += 1
+
         self._log_time_of_request(current_time)
         self._log_response_time(response_time)
+        timestamp = kwargs.get("date", None)
+        if timestamp:
+            self.all_req_timestamps.append(timestamp)
+        error = kwargs.get("error", None)
+        if error:
+            self.num_errors += 1
+        current_time = time.time()
 
         # increase total content-length
         self.total_content_length += content_length
@@ -324,7 +335,6 @@ class StatsEntry:
     def _log_time_of_request(self, current_time):
         t = int(current_time)
         self.num_reqs_per_sec[t] = self.num_reqs_per_sec.setdefault(t, 0) + 1
-        self.all_req_timestamps.append(current_time)
         self.last_request_timestamp = current_time
 
     def _log_response_time(self, response_time):
@@ -357,10 +367,10 @@ class StatsEntry:
         self.response_times[rounded_response_time] += 1
 
     def log_error(self, error, **kwargs):
-        print("in log error")
-        print(kwargs)
-        print(error)
-        print()
+        # print("in log error")
+        # print(kwargs)
+        # print(error)
+        # print()
         self.num_failures += 1
         t = int(time.time())
         self.num_fail_per_sec[t] = self.num_fail_per_sec.setdefault(t, 0) + 1
