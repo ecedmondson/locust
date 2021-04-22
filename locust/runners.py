@@ -44,6 +44,7 @@ FALLBACK_INTERVAL = 5
 
 greenlet_exception_handler = greenlet_exception_logger(logger)
 
+
 class BevyLocustResponse:
     def __init__(self, method, name, response_time, content_length, elapsed, date, error=False):
         self.method = method
@@ -53,6 +54,7 @@ class BevyLocustResponse:
         self.elapsed = elapsed
         self.date = date
         self.error = error
+
 
 class BevyResponseTracker:
     def __init__(self):
@@ -91,13 +93,29 @@ class Runner:
         self.bevy_response_tracker = BevyResponseTracker()
 
         # set up event listeners for recording requests
-        def on_request_success(request_type, name, response_time, response_length):
-            print(request_type)
-            #response = BevyLocustResponse()
-            #self.bevy_response_tracker.add()
+        def on_request_success(request_type, name, response_time, response_length, **kwargs):
+            response = BevyLocustResponse(
+                request_type,
+                name,
+                response_time,
+                response_length,
+                kwargs.get("elapsed", None),
+                kwargs.get("date", None),
+            )
+            self.bevy_response_tracker.add(response)
             self.stats.log_request(request_type, name, response_time, response_length)
 
-        def on_request_failure(request_type, name, response_time, response_length, exception):
+        def on_request_failure(request_type, name, response_time, response_length, exception, **kwargs):
+            response = BevyLocustResponse(
+                request_type,
+                name,
+                response_time,
+                response_length,
+                kwargs.get("elapsed", None),
+                kwargs.get("date", None),
+                error=True,
+            )
+            self.bevy_response_tracker.add(response)
             self.stats.log_request(request_type, name, response_time, response_length)
             self.stats.log_error(request_type, name, exception)
 
@@ -402,6 +420,7 @@ class Runner:
         Stop any running load test and kill all greenlets for the runner
         """
         self.stop()
+        print(self.bevy_response_tracker.all_responses)
         self.greenlet.kill(block=True)
 
     def log_exception(self, node_id, msg, formatted_tb):
