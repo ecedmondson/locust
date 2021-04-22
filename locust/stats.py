@@ -149,7 +149,13 @@ class RequestStats:
         print(error)
         print()
         self.total.log_error(error, **kwargs)
-        self.get(name, method).log_error(error)
+        x = self.get(name, method)
+        print("getting by name and method")
+        print(x)
+        print(dir(x))
+        print(type(x))
+        print()
+        self.get(name, method).log_error(error, **kwargs)
 
         # store error in errors dict
         key = StatsError.create_key(method, name, error)
