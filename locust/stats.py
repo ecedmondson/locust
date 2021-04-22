@@ -134,7 +134,13 @@ class RequestStats:
         print(response_time)
         ()
         self.total.log(response_time, content_length, **kwargs)
-        self.get(name, method).log(response_time, content_length)
+        x = self.get(name, method)
+        print("getting by name and method")
+        print(x)
+        print(dir(x))
+        print(type(x))
+        print()
+        self.get(name, method).log(response_time, content_length, **kwargs)
 
     def log_error(self, method, name, error, **kwargs):
         print("in log error")
