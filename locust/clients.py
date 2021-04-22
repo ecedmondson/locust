@@ -149,6 +149,12 @@ class HttpSession(requests.Session):
                     exception=e,
                 )
             else:
+                print("did we catch the response?")
+                print(response)
+                print(type(response))
+                print(dir(response))
+                print("okay that's enough")
+                print()
                 self.request_success.fire(
                     request_type=request_meta["method"],
                     name=request_meta["name"],
