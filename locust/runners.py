@@ -118,7 +118,7 @@ class Runner:
                 date=kwargs.get("date", None),
             )
             self.bevy_response_tracker.add(response)
-            self.stats.log_request(request_type, name, response_time, response_length)
+            self.stats.log_request(request_type, name, response_time, response_length, **kwargs)
 
         def on_request_failure(request_type, name, response_time, response_length, exception, **kwargs):
             response = BevyLocustResponse(
@@ -131,8 +131,8 @@ class Runner:
                 error=True,
             )
             self.bevy_response_tracker.add(response)
-            self.stats.log_request(request_type, name, response_time, response_length)
-            self.stats.log_error(request_type, name, exception)
+            self.stats.log_request(request_type, name, response_time, response_length, **kwargs)
+            self.stats.log_error(request_type, name, exception, **kwargs)
 
         self.environment.events.request_success.add_listener(on_request_success)
         self.environment.events.request_failure.add_listener(on_request_failure)
@@ -435,15 +435,15 @@ class Runner:
         Stop any running load test and kill all greenlets for the runner
         """
         self.stop()
-        for listy in self.bevy_response_tracker.all_responses.values():
-            for r in listy.responses:
-                print(r.name)
-                print(r.method)
-                print(r.error)
-                print(r.response_time)
-                print(r.elapsed)
-                print(r.date)
-                print()
+        # for listy in self.bevy_response_tracker.all_responses.values():
+        #     for r in listy.responses:
+        #         print(r.name)
+        #         print(r.method)
+        #         print(r.error)
+        #         print(r.response_time)
+        #         print(r.elapsed)
+        #         print(r.date)
+        #         print()
         self.greenlet.kill(block=True)
 
     def log_exception(self, node_id, msg, formatted_tb):

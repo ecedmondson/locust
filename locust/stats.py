@@ -127,8 +127,8 @@ class RequestStats:
     def start_time(self):
         return self.total.start_time
 
-    def log_request(self, method, name, response_time, content_length, error=False):
-        self.total.log(response_time, content_length, error=error)
+    def log_request(self, method, name, response_time, content_length, **kwargs):
+        self.total.log(response_time, content_length, **kwargs)
         self.get(name, method).log(response_time, content_length)
 
     def log_error(self, method, name, error, **kwargs):
@@ -270,7 +270,7 @@ class StatsEntry:
         self.response_times = {}
         self.min_response_time = None
         self.max_response_time = 0
-        self.all_req_timestamps = []
+        self.all_req_timestamps = [] # BevyResponseTracker()
         self.last_request_timestamp = None
         self.num_reqs_per_sec = {}
         self.num_fail_per_sec = {}
@@ -279,8 +279,10 @@ class StatsEntry:
             self.response_times_cache = OrderedDict()
             self._cache_response_times(int(time.time()))
 
-    def log(self, response_time, content_length, error=False):
+    def log(self, response_time, content_length, **kwargs):
         # get the time
+        print("in log")
+        print(kwargs)
         current_time = time.time()
         t = int(current_time)
 
@@ -330,7 +332,9 @@ class StatsEntry:
         self.response_times.setdefault(rounded_response_time, 0)
         self.response_times[rounded_response_time] += 1
 
-    def log_error(self, error):
+    def log_error(self, error, **kwargs):
+        print("in log error")
+        print(kwargs)
         self.num_failures += 1
         t = int(time.time())
         self.num_fail_per_sec[t] = self.num_fail_per_sec.setdefault(t, 0) + 1
