@@ -141,19 +141,17 @@ class HttpSession(requests.Session):
             try:
                 response.raise_for_status()
             except RequestException as e:
-                print("in failure")
-                print(response)
-                print(dir(response))
-                print()
+                failure_kwargs = success_kwargs = {"elapsed": response.elapsed, "date": response.headers['date']}
                 self.request_failure.fire(
                     request_type=request_meta["method"],
                     name=request_meta["name"],
                     response_time=request_meta["response_time"],
                     response_length=request_meta["content_size"],
                     exception=e,
+                    **failure_kwargs,
                 )
             else:
-                success_kwargs = {"elapsed": repsonse.elapsed, "date": response.headers['date']}
+                success_kwargs = {"elapsed": response.elapsed, "date": response.headers['date']}
                 self.request_success.fire(
                     request_type=request_meta["method"],
                     name=request_meta["name"],

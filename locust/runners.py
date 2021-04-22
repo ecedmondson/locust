@@ -441,6 +441,9 @@ class Runner:
                 print(r.method)
                 print(r.error)
                 print(r.response_time)
+                print(r.elapsed)
+                print(r.date)
+                print()
         self.greenlet.kill(block=True)
 
     def log_exception(self, node_id, msg, formatted_tb):
