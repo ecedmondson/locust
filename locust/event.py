@@ -22,6 +22,7 @@ class EventHook:
 
     def __init__(self):
         self._handlers = []
+        self.listeners = {}
 
     def add_listener(self, handler):
         self._handlers.append(handler)

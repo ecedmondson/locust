@@ -44,6 +44,25 @@ FALLBACK_INTERVAL = 5
 
 greenlet_exception_handler = greenlet_exception_logger(logger)
 
+class BevyLocustResponse:
+    def __init__(self, method, name, response_time, content_length, elapsed, date, error=False):
+        self.method = method
+        self.name = name
+        self.response_time = response_time
+        self.content_length = content_length
+        self.elapsed = elapsed
+        self.date = date
+        self.error = error
+
+class BevyResponseTracker:
+    def __init__(self):
+        self.all_responses = {}
+
+    def add(self, bevy_locust_response):
+        if not bevy_locust_response.name in self.all_responses.keys():
+            self.all_responses[bevy_locust_response.name] = []
+        self.all_responses[bevy_locust_response.name].append(bevy_locust_response)
+
 
 class Runner:
     """
@@ -69,15 +88,17 @@ class Runner:
         self.greenlet.spawn(self.monitor_cpu).link_exception(greenlet_exception_handler)
         self.exceptions = {}
         self.target_user_count = None
+        self.bevy_response_tracker = BevyResponseTracker()
 
         # set up event listeners for recording requests
-        def on_request_success(request_type, name, response_time, response_length, **kwargs):
+        def on_request_success(request_type, name, response_time, response_length):
+            print(args)
+            print(request_type)
+            #response = BevyLocustResponse()
+            #self.bevy_response_tracker.add()
             self.stats.log_request(request_type, name, response_time, response_length)
 
-        def on_request_failure(request_type, name, response_time, response_length, exception, **kwargs):
-            print("on request failure")
-            print(kwargs)
-            print()
+        def on_request_failure(request_type, name, response_time, response_length, exception):
             self.stats.log_request(request_type, name, response_time, response_length)
             self.stats.log_error(request_type, name, exception)
 

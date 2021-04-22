@@ -40,10 +40,6 @@ CachedResponseTimes = namedtuple("CachedResponseTimes", ["response_times", "num_
 PERCENTILES_TO_REPORT = [0.50, 0.66, 0.75, 0.80, 0.90, 0.95, 0.98, 0.99, 0.999, 0.9999, 1.0]
 
 
-class RequestStatsAdditionError(Exception):
-    pass
-
-
 def get_readable_percentiles(percentile_list):
     """
     Converts a list of percentiles from 0-1 fraction to 0%-100% view for using in console & csv reporting
@@ -131,11 +127,11 @@ class RequestStats:
     def start_time(self):
         return self.total.start_time
 
-    def log_request(self, method, name, response_time, content_length):
-        self.total.log(response_time, content_length)
+    def log_request(self, method, name, response_time, content_length, error=False):
+        self.total.log(response_time, content_length, error=error)
         self.get(name, method).log(response_time, content_length)
 
-    def log_error(self, method, name, error):
+    def log_error(self, method, name, error, **kwargs):
         self.total.log_error(error)
         self.get(name, method).log_error(error)
 
@@ -152,8 +148,6 @@ class RequestStats:
         Retrieve a StatsEntry instance by name and method
         """
         entry = self.entries.get((name, method))
-        print("entries")
-        print(self.entries)
         if not entry:
             entry = StatsEntry(self, name, method, use_response_times_cache=self.use_response_times_cache)
             self.entries[(name, method)] = entry
@@ -199,6 +193,8 @@ class StatsEntry:
 
     method = None
     """ Method (GET, POST, PUT, etc.) """
+
+    error = None
 
     num_requests = None
     """ The number of requests made """
@@ -283,7 +279,7 @@ class StatsEntry:
             self.response_times_cache = OrderedDict()
             self._cache_response_times(int(time.time()))
 
-    def log(self, response_time, content_length):
+    def log(self, response_time, content_length, error=False):
         # get the time
         current_time = time.time()
         t = int(current_time)
