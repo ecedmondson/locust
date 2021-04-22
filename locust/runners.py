@@ -435,7 +435,7 @@ class Runner:
         Stop any running load test and kill all greenlets for the runner
         """
         self.stop()
-        for listy in self.bevy_response_tracker.values():
+        for listy in self.bevy_response_tracker.all_responses.values():
             for r in listy:
                 print(r.name)
                 print(r.method)
