@@ -128,10 +128,20 @@ class RequestStats:
         return self.total.start_time
 
     def log_request(self, method, name, response_time, content_length, **kwargs):
+        print("in log request")
+        print(kwargs)
+        print(name)
+        print(response_time)
+        ()
         self.total.log(response_time, content_length, **kwargs)
         self.get(name, method).log(response_time, content_length)
 
     def log_error(self, method, name, error, **kwargs):
+        print("in log error")
+        print(kwargs)
+        print(name)
+        print(error)
+        print()
         self.total.log_error(error, **kwargs)
         self.get(name, method).log_error(error)
 
@@ -283,6 +293,8 @@ class StatsEntry:
         # get the time
         print("in log")
         print(kwargs)
+        print(response_time)
+        print()
         current_time = time.time()
         t = int(current_time)
 
@@ -335,6 +347,8 @@ class StatsEntry:
     def log_error(self, error, **kwargs):
         print("in log error")
         print(kwargs)
+        print(error)
+        print()
         self.num_failures += 1
         t = int(time.time())
         self.num_fail_per_sec[t] = self.num_fail_per_sec.setdefault(t, 0) + 1
