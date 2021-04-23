@@ -128,33 +128,15 @@ class RequestStats:
         return self.total.start_time
 
     def log_request(self, method, name, response_time, content_length, **kwargs):
-        # print("in log request")
-        # print(kwargs)
-        # print(name)
-        # print(response_time)
-        # ()
         self.total.log(response_time, content_length, **kwargs)
         x = self.get(name, method)
-        # print("getting by name and method")
-        # print(x)
-        # print(dir(x))
-        # print(type(x))
-        # print()
         self.get(name, method).log(response_time, content_length, **kwargs)
 
     def log_error(self, method, name, error, **kwargs):
-        # print("in log error")
-        # print(kwargs)
-        # print(name)
-        # print(error)
-        # print()
         self.total.log_error(error, **kwargs)
         x = self.get(name, method)
-        # print("getting by name and method")
-        # print(x)
-        # print(dir(x))
-        # print(type(x))
-        # print()
+        print(x)
+        print(dir(x))
         self.get(name, method).log_error(error, **kwargs)
 
         # store error in errors dict
@@ -303,15 +285,7 @@ class StatsEntry:
     def log(self, response_time, content_length, **kwargs):
         # get the time
         current_time = time.time()
-        # print("in log")
-        # print(kwargs)
-        # print(response_time)
         t = int(current_time)
-        # print("locust builtin current time")
-        # print(current_time)
-        # print("response timestamp")
-        # print(kwargs.get("date", None))
-        # print()
 
         if self.use_response_times_cache and self.last_request_timestamp and t > int(self.last_request_timestamp):
             # see if we shall make a copy of the response_times dict and store in the cache
