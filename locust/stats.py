@@ -133,8 +133,8 @@ class RequestStats:
 
     def log_error(self, method, name, error, timestamp_from_log_request):
         self.total.log_error(error, timestamp_from_log_request)
-        print(type(self.total))
-        print(type(self.get(name, method)))
+        print(hex(id((self.total))))
+        print(hex(id(self.get(name, method))))
         self.get(name, method).log_error(error, timestamp_from_log_request)
 
         # store error in errors dict
