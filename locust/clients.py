@@ -141,14 +141,12 @@ class HttpSession(requests.Session):
             try:
                 response.raise_for_status()
             except RequestException as e:
-                print(response.status_code)
                 self.request_failure.fire(
                     request_type=request_meta["method"],
                     name=request_meta["name"],
                     response_time=request_meta["response_time"],
                     response_length=request_meta["content_size"],
                     exception=e,
-                    **failure_kwargs,
                 )
             else:
                 self.request_success.fire(
@@ -156,7 +154,6 @@ class HttpSession(requests.Session):
                     name=request_meta["name"],
                     response_time=request_meta["response_time"],
                     response_length=request_meta["content_size"],
-                    **success_kwargs,
                 )
             if name:
                 response.url = orig_url
