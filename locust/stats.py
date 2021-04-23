@@ -141,7 +141,7 @@ class RequestStats:
         if not entry:
             entry = StatsError(method, name, error)
             self.errors[key] = entry
-        entry.occurred()s
+        entry.occurred()
 
     def get(self, name, method):
         """
