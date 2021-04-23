@@ -132,10 +132,8 @@ class RequestStats:
         return self.get(name, method).log(response_time, content_length)
 
     def log_error(self, method, name, error, timestamp_from_log_request):
-        self.total.log_error(error, timestamp_from_log_request)
-        print(hex(id((self.total))))
-        print(hex(id(self.get(name, method))))
-        self.get(name, method).log_error(error, timestamp_from_log_request)
+        self.total.log_error(error)
+        self.get(name, method).log_error(error, error_timestamp=timestamp_from_log_request)
 
         # store error in errors dict
         key = StatsError.create_key(method, name, error)
@@ -143,7 +141,7 @@ class RequestStats:
         if not entry:
             entry = StatsError(method, name, error)
             self.errors[key] = entry
-        entry.occurred()
+        entry.occurred()s
 
     def get(self, name, method):
         """
@@ -339,11 +337,12 @@ class StatsEntry:
         self.response_times.setdefault(rounded_response_time, 0)
         self.response_times[rounded_response_time] += 1
 
-    def log_error(self, error, error_timestamp, **kwargs):
+    def log_error(self, error, error_timestamp=None, **kwargs):
         self.num_failures += 1
         # Locust has a builtin time here, but an exact match is needed
         # for the stats JSONs. Leave locust's 't' value alone, and pass
         # in the error_timestamp from the log_request call.
+        print(error)
         t = int(time.time())
         self.num_fail_per_sec[t] = self.num_fail_per_sec.setdefault(t, 0) + 1
 
