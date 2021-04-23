@@ -347,9 +347,9 @@ class StatsEntry:
         # for the stats JSONs. Leave locust's 't' value alone, and pass
         # in the error_timestamp from the log_request call.
         if error_timestamp:
-            any_status_code_found = any_status_code_in_error_message(error)
-            if any_status_code_found:
-                self.num_fail_by_status_code[any_status_code_found] = {"timestamp": error_timestamp, "error": error}
+            status_code_found = any_status_code_in_error_message(error)
+            if status_code_found:
+                self.num_fail_by_status_code[error_timestamp] = {"status_code": status_code_found, "error": error}
 
         t = int(time.time())
         self.num_fail_per_sec[t] = self.num_fail_per_sec.setdefault(t, 0) + 1
