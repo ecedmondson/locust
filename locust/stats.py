@@ -42,6 +42,8 @@ CachedResponseTimes = namedtuple("CachedResponseTimes", ["response_times", "num_
 
 PERCENTILES_TO_REPORT = [0.50, 0.66, 0.75, 0.80, 0.90, 0.95, 0.98, 0.99, 0.999, 0.9999, 1.0]
 
+def any_status_code_in_error_message(error_msg):
+    return any([str(x) in error_msg for x in status_codes])
 
 def get_readable_percentiles(percentile_list):
     """
