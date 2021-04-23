@@ -131,10 +131,6 @@ class WebUI:
             self.update_template_args()
             return render_template("index.html", **self.template_args)
 
-        @app.route("/emily")
-        @self.auth_required_if_enabled
-        def bevy():
-            return "Hello World"
 
         @app.route("/swarm", methods=["POST"])
         @self.auth_required_if_enabled
@@ -202,10 +198,28 @@ class WebUI:
             ] = f"attachment;filename={_download_csv_suggest_file_name(filename_prefix)}"
             return response
 
+        def _download_json_data(py_dict_json, filename_prefix):
+            response = make_response(py_dict_json)
+            response.headers["application/json"]
+            response.headers[
+                "content-disposition"
+            ] = f"attachment;filename={_download_json_filename(filename_prefix)}"
+            return response
+
+        @app.route("/stats/requests/json")
+        @self.auth_required_if_enabled
+        def request_stats_json():
+            return _download_json_data(self.stats_csv_writer.all_requests_json(), "all_requests_json")
+
         @app.route("/stats/requests/csv")
         @self.auth_required_if_enabled
         def request_stats_csv():
+            print("in /stats/requests/csv")
             data = StringIO()
+            print(data)
+            print(type(data))
+            print(dir(data))
+            print()
             writer = csv.writer(data)
             self.stats_csv_writer.requests_csv(writer)
             return _download_csv_response(data.getvalue(), "requests")

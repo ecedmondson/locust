@@ -887,6 +887,32 @@ class StatsCSV:
         csv_writer.writerow(self.requests_csv_columns)
         self._requests_data_rows(csv_writer)
 
+    def all_requests_json(self):
+        stats_entires = self.environment.stats.entries
+        all_requests = {}
+        for k, v in stats_entries.items():
+            all_requests[k[0]]= {}
+            runtime_data = all_requests[k[0]]
+            all_reqs_per_s = v.num_reqs_per_sec.copy()
+            failures_per_s = v.num_fail_per_sec.copy()
+            runtime_data['method'] = k[1]
+            runtime_data['total_requests'] = v.num_requests
+            runtime_data['total_failures'] = v.num_failures
+            # Everything gets added to num_reqs_per_sec
+            # Things only get added to _num_fail_per_sec if there is a failure
+            # num_reqs_per_sec[secs] - num_fail_per_sec[secs] = num_successes_per_secs
+            runtime_data['num_reqs_per_sec'] = all_reqs_per_s
+            num_successes_per_s = {}
+            for timestamp, count in all_reqs_per_s.items():
+                failure_count = failures_per_s.get(timestamp, 0)
+                num_successes_per_s[timestamp] = count - failure_count
+            runtime_data['num_successes_per_secs'] = num_successes_per_s
+            timestamps_wo_fails = set(all_reqs_per_s.keys()) - set(failures_per_s.keys())
+            for timestamp in timestamps_wo_fails:
+                failures_per_s[timestamp] = 0
+            runtime_data['num_failures_per_sec'] = failures_per_s
+        return all_requests
+
     def _requests_data_rows(self, csv_writer):
         """Write requests csv data row, excluding header."""
         stats = self.environment.stats
