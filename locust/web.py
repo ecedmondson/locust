@@ -198,18 +198,16 @@ class WebUI:
             ] = f"attachment;filename={_download_csv_suggest_file_name(filename_prefix)}"
             return response
 
-        def _download_json_data(py_dict_json, filename_prefix):
-            response = make_response(py_dict_json)
-            response.headers['Content-type'] = "application/json"
-            response.headers[
-                "content-disposition"
-            ] = f"attachment;filename={_download_json_filename(filename_prefix)}"
-            return response
-
         @app.route("/stats/requests/json")
         @self.auth_required_if_enabled
         def request_stats_json():
-            return _download_json_data(self.stats_csv_writer.all_requests_json(), "all_requests_json")
+            data = self.stats_csv_writer.all_requests_json()
+            response = make_response(data)
+            response.headers['Content-type'] = "application/json"
+            response.headers[
+                "Content-disposition"
+            ] = f"attachment;filename={_download_json_filename(filename_prefix)}"
+            return response
 
         @app.route("/stats/requests/csv")
         @self.auth_required_if_enabled
