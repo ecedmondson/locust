@@ -206,7 +206,7 @@ class WebUI:
             response.headers['Content-type'] = "application/json"
             response.headers[
                 "Content-disposition"
-            ] = f"attachment;filename=all_requests_json_{time()}.csv"
+            ] = f"attachment;filename=all_requests_json_{time()}.json"
             return response
 
         @app.route("/stats/requests/csv")
