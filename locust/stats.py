@@ -301,11 +301,12 @@ class StatsEntry:
 
         self._log_time_of_request(current_time)
         self._log_response_time(response_time)
+        logged_time = current_time
         current_time = time.time()
 
         # increase total content-length
         self.total_content_length += content_length
-        return current_time
+        return int(logged_time)
 
     def _log_time_of_request(self, current_time):
         t = int(current_time)
@@ -873,6 +874,7 @@ class StatsCSV:
             all_requests[k[0]]= {}
             runtime_data = all_requests[k[0]]
             all_reqs_per_s = v.num_reqs_per_sec.copy()
+            all_reqs_timestamps = list(all_reqs_per_s.keys())
             failures_per_s = v.num_fail_per_sec.copy()
             runtime_data['method'] = k[1]
             runtime_data['total_requests'] = v.num_requests
@@ -886,7 +888,7 @@ class StatsCSV:
                 failure_count = failures_per_s.get(timestamp, 0)
                 num_successes_per_s[timestamp] = count - failure_count
             runtime_data['num_successes_per_secs'] = num_successes_per_s
-            timestamps_wo_fails = set(all_reqs_per_s.keys()) - set(failures_per_s.keys())
+            timestamps_wo_fails = set(all_reqs_timestamps) - set(failures_per_s.keys())
             for timestamp in timestamps_wo_fails:
                 failures_per_s[timestamp] = 0
             runtime_data['num_failures_per_sec'] = failures_per_s
