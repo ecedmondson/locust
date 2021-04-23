@@ -29,7 +29,7 @@ CSV_STATS_INTERVAL_SEC = 1
 CSV_STATS_FLUSH_INTERVAL_SEC = 10
 
 # Everything that isn't a dunder magic.
-ALL_STATUS_CODES = [getattr(sc, x).real for x in dir(HTTPStatus) if "__" not in x]
+ALL_STATUS_CODES = [getattr(HTTPStatus, x).real for x in dir(HTTPStatus) if "__" not in x]
 
 """
 Default window size/resolution - in seconds - when calculating the current
