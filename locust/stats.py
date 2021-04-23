@@ -46,7 +46,7 @@ def any_status_code_in_error_message(error_msg):
     # Theoretically there should only ever be one status code in a message.
     scs_found = {x: str(x) in str(error_msg) for x in ALL_STATUS_CODES}
     if any(scs_found.values()):
-        return list(filter(lambda x: x[1], scs_found))[0][0]
+        return list(filter(lambda x: x[1], scs_found.items()))[0][0]
     return None
 
 def get_readable_percentiles(percentile_list):
