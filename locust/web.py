@@ -200,7 +200,7 @@ class WebUI:
 
         def _download_json_data(py_dict_json, filename_prefix):
             response = make_response(py_dict_json)
-            response.headers["application/json"]
+            response.headers['Content-type'] = "application/json"
             response.headers[
                 "content-disposition"
             ] = f"attachment;filename={_download_json_filename(filename_prefix)}"
