@@ -212,12 +212,6 @@ class WebUI:
         @app.route("/stats/requests/csv")
         @self.auth_required_if_enabled
         def request_stats_csv():
-            print("in /stats/requests/csv")
-            data = StringIO()
-            print(data)
-            print(type(data))
-            print(dir(data))
-            print()
             writer = csv.writer(data)
             self.stats_csv_writer.requests_csv(writer)
             return _download_csv_response(data.getvalue(), "requests")
