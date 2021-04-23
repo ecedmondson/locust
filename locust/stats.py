@@ -4,6 +4,7 @@ import time
 from collections import namedtuple, OrderedDict
 from copy import copy
 from itertools import chain
+from http import HTTPStatus
 import csv
 
 import gevent
@@ -27,6 +28,8 @@ HISTORY_STATS_INTERVAL_SEC = 5
 CSV_STATS_INTERVAL_SEC = 1
 CSV_STATS_FLUSH_INTERVAL_SEC = 10
 
+# Everything that isn't a dunder magic.
+ALL_STATUS_CODES = [getattr(sc, x).real for x in dir(HTTPStatus) if "__" not in x]
 
 """
 Default window size/resolution - in seconds - when calculating the current
@@ -269,16 +272,17 @@ class StatsEntry:
         self.response_times = {}
         self.min_response_time = None
         self.max_response_time = 0
-        self.all_req_timestamps = [] # BevyResponseTracker()
         self.last_request_timestamp = None
         self.num_reqs_per_sec = {}
         self.num_fail_per_sec = {}
+        self.num_fail_by_status_code = {}
+
         self.total_content_length = 0
         if self.use_response_times_cache:
             self.response_times_cache = OrderedDict()
             self._cache_response_times(int(time.time()))
 
-    def log(self, response_time, content_length, **kwargs):
+    def log(self, response_time, content_length):
         # get the time
         current_time = time.time()
         t = int(current_time)
@@ -291,12 +295,6 @@ class StatsEntry:
 
         self._log_time_of_request(current_time)
         self._log_response_time(response_time)
-        timestamp = kwargs.get("date", None)
-        if timestamp:
-            self.all_req_timestamps.append(timestamp)
-        error = kwargs.get("error", None)
-        if error:
-            self.num_errors += 1
         current_time = time.time()
 
         # increase total content-length
@@ -339,10 +337,14 @@ class StatsEntry:
 
     def log_error(self, error, error_timestamp=None, **kwargs):
         self.num_failures += 1
-        # Locust has a builtin time here, but an exact match is needed
+        # Locust has a built-in time call for `t` here, but an exact match is needed
         # for the stats JSONs. Leave locust's 't' value alone, and pass
         # in the error_timestamp from the log_request call.
-        print(error)
+        if error_timestamp:
+            any_status_code_found = any_status_code_in_error_message(error):
+            if any_status_code_found:
+                self.num_fail_by_status_code[any_status_code_found] = {"timestamp": error_timestamp, "error": error}
+
         t = int(time.time())
         self.num_fail_per_sec[t] = self.num_fail_per_sec.setdefault(t, 0) + 1
 
