@@ -127,17 +127,14 @@ class RequestStats:
     def start_time(self):
         return self.total.start_time
 
-    def log_request(self, method, name, response_time, content_length, **kwargs):
-        self.total.log(response_time, content_length, **kwargs)
-        x = self.get(name, method)
-        self.get(name, method).log(response_time, content_length, **kwargs)
+    def log_request(self, method, name, response_time, content_length):
+        self.total.log(response_time, content_length)
+        return self.get(name, method).log(response_time, content_length)
 
-    def log_error(self, method, name, error, **kwargs):
-        self.total.log_error(error, **kwargs)
-        x = self.get(name, method)
-        print(x)
-        print(dir(x))
-        self.get(name, method).log_error(error, **kwargs)
+    def log_error(self, method, name, error, timestamp_from_log_request):
+        self.total.log_error(error)
+        print(error)
+        self.get(name, method).log_error(error, timestamp_from_log_request)
 
         # store error in errors dict
         key = StatsError.create_key(method, name, error)
@@ -305,6 +302,7 @@ class StatsEntry:
 
         # increase total content-length
         self.total_content_length += content_length
+        return current_time
 
     def _log_time_of_request(self, current_time):
         t = int(current_time)
@@ -340,12 +338,11 @@ class StatsEntry:
         self.response_times.setdefault(rounded_response_time, 0)
         self.response_times[rounded_response_time] += 1
 
-    def log_error(self, error, **kwargs):
-        # print("in log error")
-        # print(kwargs)
-        # print(error)
-        # print()
+    def log_error(self, error, error_timestamp, **kwargs):
         self.num_failures += 1
+        # Locust has a builtin time here, but an exact match is needed
+        # for the stats JSONs. Leave locust's 't' value alone, and pass
+        # in the error_timestamp from the log_request call.
         t = int(time.time())
         self.num_fail_per_sec[t] = self.num_fail_per_sec.setdefault(t, 0) + 1
 

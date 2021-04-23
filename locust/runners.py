@@ -109,30 +109,11 @@ class Runner:
 
         # set up event listeners for recording requests
         def on_request_success(request_type, name, response_time, response_length, **kwargs):
-            response = BevyLocustResponse(
-                request_type,
-                name,
-                response_time,
-                response_length,
-                elapsed=kwargs.get("elapsed", None),
-                date=kwargs.get("date", None),
-            )
-            self.bevy_response_tracker.add(response)
-            self.stats.log_request(request_type, name, response_time, response_length, **kwargs)
+            self.stats.log_request(request_type, name, response_time, response_length)
 
         def on_request_failure(request_type, name, response_time, response_length, exception, **kwargs):
-            response = BevyLocustResponse(
-                request_type,
-                name,
-                response_time,
-                response_length,
-                elapsed=kwargs.get("elapsed", None),
-                date=kwargs.get("date", None),
-                error=True,
-            )
-            self.bevy_response_tracker.add(response)
-            self.stats.log_request(request_type, name, response_time, response_length, **kwargs)
-            self.stats.log_error(request_type, name, exception, **kwargs)
+            error_timestamp = self.stats.log_request(request_type, name, response_time, response_length)
+            self.stats.log_error(request_type, name, exception, error_timestamp)
 
         self.environment.events.request_success.add_listener(on_request_success)
         self.environment.events.request_failure.add_listener(on_request_failure)
