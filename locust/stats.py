@@ -43,7 +43,11 @@ CachedResponseTimes = namedtuple("CachedResponseTimes", ["response_times", "num_
 PERCENTILES_TO_REPORT = [0.50, 0.66, 0.75, 0.80, 0.90, 0.95, 0.98, 0.99, 0.999, 0.9999, 1.0]
 
 def any_status_code_in_error_message(error_msg):
-    return any([str(x) in str(error_msg) for x in ALL_STATUS_CODES])
+    # Theoretically there should only ever be one status code in a message.
+    scs_found = {x: str(x) in str(error_msg) for x in ALL_STATUS_CODES}
+    if any(scs_found.values()):
+        return list(filter(lambda x: x[1], scs_found))[0][0]
+    return None
 
 def get_readable_percentiles(percentile_list):
     """
