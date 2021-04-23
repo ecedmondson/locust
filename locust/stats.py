@@ -888,7 +888,7 @@ class StatsCSV:
         self._requests_data_rows(csv_writer)
 
     def all_requests_json(self):
-        stats_entires = self.environment.stats.entries
+        stats_entries = self.environment.stats.entries
         all_requests = {}
         for k, v in stats_entries.items():
             all_requests[k[0]]= {}
