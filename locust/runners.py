@@ -45,6 +45,42 @@ FALLBACK_INTERVAL = 5
 greenlet_exception_handler = greenlet_exception_logger(logger)
 
 
+class BevyLocustResponse:
+    def __init__(self, method, name, response_time, content_length, elapsed=None, date=None, error=False):
+        self.method = method
+        self.name = name
+        self.response_time = response_time
+        self.content_length = content_length
+        self.elapsed = elapsed
+        self.date = date
+        self.error = error
+
+class BevyResponseList:
+    def __init__(self):
+        self.responses = []
+
+    def __getattr__(self, name):
+        """Get the named attribute from all items in the list."""
+        try:
+            return [getattr(x, name) for x in self.responses]
+        except AttributeError:
+            message = 'Attribute "{}" not present on all list items.'
+            raise AttributeError(message.format(name))
+
+    def append(self, item):
+        self.responses.append(item)
+
+
+class BevyResponseTracker:
+    def __init__(self):
+        self.all_responses = {}
+
+    def add(self, bevy_locust_response):
+        if not bevy_locust_response.name in self.all_responses.keys():
+            self.all_responses[bevy_locust_response.name] = BevyResponseList()
+        self.all_responses[bevy_locust_response.name].append(bevy_locust_response)
+
+
 class Runner:
     """
     Orchestrates the load test by starting and stopping the users.
@@ -69,14 +105,15 @@ class Runner:
         self.greenlet.spawn(self.monitor_cpu).link_exception(greenlet_exception_handler)
         self.exceptions = {}
         self.target_user_count = None
+        self.bevy_response_tracker = BevyResponseTracker()
 
         # set up event listeners for recording requests
         def on_request_success(request_type, name, response_time, response_length, **kwargs):
             self.stats.log_request(request_type, name, response_time, response_length)
 
         def on_request_failure(request_type, name, response_time, response_length, exception, **kwargs):
-            self.stats.log_request(request_type, name, response_time, response_length)
-            self.stats.log_error(request_type, name, exception)
+            error_timestamp = self.stats.log_request(request_type, name, response_time, response_length)
+            self.stats.log_error(request_type, name, exception, error_timestamp)
 
         self.environment.events.request_success.add_listener(on_request_success)
         self.environment.events.request_failure.add_listener(on_request_failure)
@@ -102,6 +139,18 @@ class Runner:
 
     @property
     def stats(self) -> RequestStats:
+        # environment.stats.entries -> {k:v, etc.} where k is the endpoint and v is StatsEntry object
+        # StatsEntry.all_req_timestamps -> added by me, timestamps of all reqs for this endpoint
+        # StatsEntry.name -> endpoint
+        # StatsEntry.method -> HTTP method (i.e. GET, POST)
+        # StatsEntry.num_requests -> total number_of_requests for this endpoint and method
+        # StatsEntry.num_failures -> total number of request failrues for this endpoint and method
+        # print(v.num_reqs_per_second)
+        # enviroment.stats.errors -> {k:v, etc.} where K is the md5 hash of method, name, error and v is StatsError
+        # StatsError.name -> endpoint
+        # StatsError.method -> HttmpMethod
+        # StatsError.error -> particular error logged with this method of this request? md5 seems to indicate so
+        # StatsError.occurrences -> occurence of failures. Again, not sure if it is specific to the error or specific to the request
         return self.environment.stats
 
     @property
@@ -367,6 +416,15 @@ class Runner:
         Stop any running load test and kill all greenlets for the runner
         """
         self.stop()
+        # for listy in self.bevy_response_tracker.all_responses.values():
+        #     for r in listy.responses:
+        #         print(r.name)
+        #         print(r.method)
+        #         print(r.error)
+        #         print(r.response_time)
+        #         print(r.elapsed)
+        #         print(r.date)
+        #         print()
         self.greenlet.kill(block=True)
 
     def log_exception(self, node_id, msg, formatted_tb):

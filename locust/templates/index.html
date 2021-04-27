@@ -70,8 +70,6 @@
                     {% else %}
                         <label for="user_count">Number of total users to simulate</label>
                         <input type="text" name="user_count" id="user_count" class="val" value="{{ num_users or "" }}"/><br>
-                        <label for="test_client">Number of total users to simulate</label>
-                        <input type="text" name="test_client" id="test_client" class="val" value="{{ test_client or "" }}"/><br>
                         <label for="spawn_rate">Spawn rate <span style="color:#8a8a8a;">(users spawned/second)</span></label>
                         <input type="text" name="spawn_rate" id="spawn_rate" class="val" value="{{ spawn_rate or "" }}"/><br>
                     {% endif %}
@@ -188,6 +186,7 @@
                     <a href="./stats/failures/csv">Download failures CSV</a><br>
                     <a href="./exceptions/csv">Download exceptions CSV</a><br>
                     <a href="./stats/report" target="_blank">Download Report</a><br>
+                    <a href="./stats/requests/json">Download all requests JSON</a><br>
                 </div>
             </div>
             {% if is_distributed %}

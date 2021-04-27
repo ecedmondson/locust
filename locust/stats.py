@@ -4,6 +4,7 @@ import time
 from collections import namedtuple, OrderedDict
 from copy import copy
 from itertools import chain
+from http import HTTPStatus
 import csv
 
 import gevent
@@ -27,6 +28,8 @@ HISTORY_STATS_INTERVAL_SEC = 5
 CSV_STATS_INTERVAL_SEC = 1
 CSV_STATS_FLUSH_INTERVAL_SEC = 10
 
+# Everything that isn't a dunder magic.
+ALL_STATUS_CODES = [getattr(HTTPStatus, x).real for x in dir(HTTPStatus) if "__" not in x]
 
 """
 Default window size/resolution - in seconds - when calculating the current
@@ -39,10 +42,12 @@ CachedResponseTimes = namedtuple("CachedResponseTimes", ["response_times", "num_
 
 PERCENTILES_TO_REPORT = [0.50, 0.66, 0.75, 0.80, 0.90, 0.95, 0.98, 0.99, 0.999, 0.9999, 1.0]
 
-
-class RequestStatsAdditionError(Exception):
-    pass
-
+def any_status_code_in_error_message(error_msg):
+    # Theoretically there should only ever be one status code in a message.
+    scs_found = {x: str(x) in str(error_msg) for x in ALL_STATUS_CODES}
+    if any(scs_found.values()):
+        return list(filter(lambda x: x[1], scs_found.items()))[0][0]
+    return None
 
 def get_readable_percentiles(percentile_list):
     """
@@ -133,11 +138,11 @@ class RequestStats:
 
     def log_request(self, method, name, response_time, content_length):
         self.total.log(response_time, content_length)
-        self.get(name, method).log(response_time, content_length)
+        return self.get(name, method).log(response_time, content_length)
 
-    def log_error(self, method, name, error):
+    def log_error(self, method, name, error, timestamp_from_log_request):
         self.total.log_error(error)
-        self.get(name, method).log_error(error)
+        self.get(name, method).log_error(error, error_timestamp=timestamp_from_log_request)
 
         # store error in errors dict
         key = StatsError.create_key(method, name, error)
@@ -266,6 +271,7 @@ class StatsEntry:
     def reset(self):
         self.start_time = time.time()
         self.num_requests = 0
+        self.num_errors = 0
         self.num_none_requests = 0
         self.num_failures = 0
         self.total_response_time = 0
@@ -275,6 +281,8 @@ class StatsEntry:
         self.last_request_timestamp = None
         self.num_reqs_per_sec = {}
         self.num_fail_per_sec = {}
+        self.num_fail_by_status_code = {}
+
         self.total_content_length = 0
         if self.use_response_times_cache:
             self.response_times_cache = OrderedDict()
@@ -290,11 +298,15 @@ class StatsEntry:
             self._cache_response_times(t - 1)
 
         self.num_requests += 1
+
         self._log_time_of_request(current_time)
         self._log_response_time(response_time)
+        logged_time = current_time
+        current_time = time.time()
 
         # increase total content-length
         self.total_content_length += content_length
+        return int(logged_time)
 
     def _log_time_of_request(self, current_time):
         t = int(current_time)
@@ -330,8 +342,16 @@ class StatsEntry:
         self.response_times.setdefault(rounded_response_time, 0)
         self.response_times[rounded_response_time] += 1
 
-    def log_error(self, error):
+    def log_error(self, error, error_timestamp=None, **kwargs):
         self.num_failures += 1
+        # Locust has a built-in time call for `t` here, but an exact match is needed
+        # for the stats JSONs. Leave locust's 't' value alone, and pass
+        # in the error_timestamp from the log_request call.
+        if error_timestamp:
+            status_code_found = any_status_code_in_error_message(error)
+            if status_code_found:
+                self.num_fail_by_status_code[error_timestamp] = {"status_code": status_code_found, "error": error}
+
         t = int(time.time())
         self.num_fail_per_sec[t] = self.num_fail_per_sec.setdefault(t, 0) + 1
 
@@ -846,6 +866,33 @@ class StatsCSV:
         """Write requests csv with header and data rows."""
         csv_writer.writerow(self.requests_csv_columns)
         self._requests_data_rows(csv_writer)
+
+    def all_requests_json(self):
+        stats_entries = self.environment.stats.entries
+        all_requests = {}
+        for k, v in stats_entries.items():
+            all_requests[k[0]]= {}
+            runtime_data = all_requests[k[0]]
+            all_reqs_per_s = v.num_reqs_per_sec.copy()
+            all_reqs_timestamps = list(all_reqs_per_s.keys())
+            failures_per_s = v.num_fail_per_sec.copy()
+            runtime_data['method'] = k[1]
+            runtime_data['total_requests'] = v.num_requests
+            runtime_data['total_failures'] = v.num_failures
+            # Everything gets added to num_reqs_per_sec
+            # Things only get added to _num_fail_per_sec if there is a failure
+            # num_reqs_per_sec[secs] - num_fail_per_sec[secs] = num_successes_per_secs
+            runtime_data['num_reqs_per_sec'] = all_reqs_per_s
+            num_successes_per_s = {}
+            for timestamp, count in all_reqs_per_s.items():
+                failure_count = failures_per_s.get(timestamp, 0)
+                num_successes_per_s[timestamp] = count - failure_count
+            runtime_data['num_successes_per_secs'] = num_successes_per_s
+            timestamps_wo_fails = set(all_reqs_timestamps) - set(failures_per_s.keys())
+            for timestamp in timestamps_wo_fails:
+                failures_per_s[timestamp] = 0
+            runtime_data['num_failures_per_sec'] = failures_per_s
+        return all_requests
 
     def _requests_data_rows(self, csv_writer):
         """Write requests csv data row, excluding header."""

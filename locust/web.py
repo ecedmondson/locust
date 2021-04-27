@@ -126,25 +126,16 @@ class WebUI:
         @app.route("/")
         @self.auth_required_if_enabled
         def index():
-            print(dir(environment.runner))
-            print(environment.runner.context)
-            print(dir(environment.runner.context))
             if not environment.runner:
                 return make_response("Error: Locust Environment does not have any runner", 500)
             self.update_template_args()
             return render_template("index.html", **self.template_args)
 
-        @app.route("/emily")
-        @self.auth_required_if_enabled
-        def bevy():
-            return "Hello World"
 
         @app.route("/swarm", methods=["POST"])
         @self.auth_required_if_enabled
         def swarm():
             assert request.method == "POST"
-            print(request.form)
-            print(dir(environment.runner))
             if request.form.get("host"):
                 # Replace < > to guard against XSS
                 environment.host = str(request.form["host"]).replace("<", "").replace(">", "")
@@ -207,10 +198,20 @@ class WebUI:
             ] = f"attachment;filename={_download_csv_suggest_file_name(filename_prefix)}"
             return response
 
+        @app.route("/stats/requests/json")
+        @self.auth_required_if_enabled
+        def request_stats_json():
+            data = self.stats_csv_writer.all_requests_json()
+            response = make_response(data)
+            response.headers['Content-type'] = "application/json"
+            response.headers[
+                "Content-disposition"
+            ] = f"attachment;filename=all_requests_json_{time()}.json"
+            return response
+
         @app.route("/stats/requests/csv")
         @self.auth_required_if_enabled
         def request_stats_csv():
-            data = StringIO()
             writer = csv.writer(data)
             self.stats_csv_writer.requests_csv(writer)
             return _download_csv_response(data.getvalue(), "requests")

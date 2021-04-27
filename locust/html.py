@@ -12,6 +12,8 @@ def render_template(file, **kwargs):
     template = env.get_template(file)
     return template.render(**kwargs)
 
+def utc_from_ms_since_unix_epoch(milliseconds):
+    return datetime.utcfromtimestamp(milliseconds / 1000.0)
 
 def get_html_report(environment, show_download_link=True):
     stats = environment.runner.stats
