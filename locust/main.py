@@ -126,7 +126,8 @@ def main():
 
     # parse all command line options
     options = parse_options()
-
+    print(options)
+    raise Exception('woah cowboy!')
     if options.headful:
         options.headless = False
 
