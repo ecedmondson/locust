@@ -320,7 +320,10 @@ def main():
 
     if options.headless:
         # headless mode
-        runner.user_class_test_selection = [user_classes[x] for x in options.test_clients]
+        if options.test_clients[0] != 'all':
+            runner.user_class_test_selection = [user_classes[x] for x in options.test_clients]
+        if options.test_clients[0] == 'all':
+            runner.user_class_test_selection = list(user_classes.values())
         if options.master:
             # wait for worker nodes to connect
             while len(runner.clients.ready) < options.expect_workers:
