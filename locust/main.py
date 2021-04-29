@@ -141,6 +141,10 @@ def main():
     if options.headless:
         if not validate_user_test_client_input(options.test_clients, user_classes):
             sys.exit(1)
+        if options.test_clients[0] != 'all':
+            runner.user_class_test_selection = [user_classes[x] for x in options.test_clients]
+        if options.test_clients[0] == 'all':
+            runner.user_class_test_selection = list(user_classes.values())
 
     if options.slave or options.expect_slaves:
         sys.stderr.write("The --slave/--expect-slaves parameters have been renamed --worker/--expect-workers\n")
@@ -320,10 +324,6 @@ def main():
 
     if options.headless:
         # headless mode
-        if options.test_clients[0] != 'all':
-            runner.user_class_test_selection = [user_classes[x] for x in options.test_clients]
-        if options.test_clients[0] == 'all':
-            runner.user_class_test_selection = list(user_classes.values())
         if options.master:
             # wait for worker nodes to connect
             while len(runner.clients.ready) < options.expect_workers:
