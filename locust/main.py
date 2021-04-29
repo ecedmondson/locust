@@ -115,6 +115,10 @@ def create_environment(user_classes, options, events=None, shape_class=None):
         parsed_options=options,
     )
 
+def validate_user_test_client_input(test_clients, locustfile_users):
+    if len(test_clients) == 1 and test_clients[0] == 'all':
+        return True
+    return all([client in locustfile_users.keys() for client in test_clients])
 
 def main():
     # find specified locustfile and make sure it exists, using a very simplified
@@ -130,8 +134,13 @@ def main():
     # parse all command line options
     options = parse_options()
 
+
     if options.headful:
         options.headless = False
+
+    if options.headless:
+        if not validate_user_test_client_input(options.test_clients, user_classes):
+            sys.exit(1)
 
     if options.slave or options.expect_slaves:
         sys.stderr.write("The --slave/--expect-slaves parameters have been renamed --worker/--expect-workers\n")
@@ -311,6 +320,7 @@ def main():
 
     if options.headless:
         # headless mode
+        runner.user_class_test_selection = [user_classes[x] for x in options.test_clients]
         if options.master:
             # wait for worker nodes to connect
             while len(runner.clients.ready) < options.expect_workers:

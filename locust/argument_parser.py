@@ -176,7 +176,7 @@ def setup_parser_arguments(parser):
         "--test-clients",
         default="all",
         type=str,
-        help="Select the test clients to run from the locustfile. When not specified with --headless, all clients run. Pass as comma-separated list: i.e. -c BasicUser, ElevatedPermissionsUser, AnonymousUser",
+        help="Select the test clients to run from the locustfile. When not specified with --headless, all clients run. Pass as quote-enclosed, comma-separated list: i.e. -c 'BasicUser, ElevatedPermissionsUser, AnonymousUser'",
     )
 
     web_ui_group = parser.add_argument_group("Web UI options")
@@ -443,10 +443,13 @@ def get_parser(default_config_files=DEFAULT_CONFIG_FILES):
     locust.events.init_command_line_parser.fire(parser=parser)
     return parser
 
+def list_from_args(user_clients_str):
+    return [x.strip() for x in user_clients_str.split(",")]
 
 def parse_options(args=None):
     parser = get_parser()
     parsed_opts = parser.parse_args(args=args)
+    parsed_opts.test_clients = list_from_args(parsed_opts.test_clients)
     print("Parsed opts: ")
     print(parsed_opts)
     print()
