@@ -123,6 +123,9 @@ def main():
 
     # import the locustfile
     docstring, user_classes, shape_class = load_locustfile(locustfile)
+    print("user classes: ")
+    print(user_classes)
+    print()
 
     # parse all command line options
     options = parse_options()

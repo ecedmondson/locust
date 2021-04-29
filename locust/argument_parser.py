@@ -171,6 +171,13 @@ def setup_parser_arguments(parser):
         dest="list_commands",
         help="Show list of possible User classes and exit",
     )
+    parser.add_argument(
+        "-c",
+        "--test-clients",
+        default="all",
+        type=str,
+        help="Select the test clients to run from the locustfile. When not specified with --headless, all clients run. Pass as comma-separated list: i.e. -c BasicUser, ElevatedPermissionsUser, AnonymousUser",
+    )
 
     web_ui_group = parser.add_argument_group("Web UI options")
     web_ui_group.add_argument(
@@ -440,6 +447,9 @@ def get_parser(default_config_files=DEFAULT_CONFIG_FILES):
 def parse_options(args=None):
     parser = get_parser()
     parsed_opts = parser.parse_args(args=args)
+    print("Parsed opts: ")
+    print(parsed_opts)
+    print()
     if parsed_opts.stats_history_enabled and (parsed_opts.csv_prefix is None):
         parser.error("'--csv-full-history' requires '--csv'.")
     return parsed_opts
