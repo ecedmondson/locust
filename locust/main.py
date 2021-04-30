@@ -253,12 +253,15 @@ def main():
 
     # Try to set user_class_test_selection to match web ui changes
     # user_classes set on options in cases where running headless
+    print("preservation")
+    print(preserved_user_classes)
+    print()
     if options.user_classes:
         # bad input already validated in argparsing. do not repeat here.
-        names = set(options.user_classes) & set(user_classes.keys())
-        runner.user_class_test_selection = [user_classes[n] for n in names]
+        names = set(options.user_classes) & set(preserved_user_classes.keys())
+        runner.user_class_test_selection = [preserved_user_classes[n] for n in names]
     else:
-        runner.user_class_test_selection = list(user_classes.values())
+        runner.user_class_test_selection = list(preserved_user_classes.values())
 
 
     # main_greenlet is pointing to runners.greenlet by default, it will point the web greenlet later if in web mode
