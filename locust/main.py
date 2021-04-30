@@ -185,10 +185,14 @@ def main():
             sys.exit(1)
         else:
             names = set(options.user_classes) & set(user_classes.keys())
-            user_classes = [user_classes[n] for n in names]
+            selected_user_classes = [user_classes[n] for n in names]
+            user_classes = selected_user_classes
+            runner.user_class_test_selection = selected_user_classes
     else:
         # list() call is needed to consume the dict_view object in Python 3
-        user_classes = list(user_classes.values())
+        all_user_classes = list(user_classes.values())
+        user_classes = all_user_classes
+        runner.user_class_test_selection = all_user_classes
 
     if os.name != "nt" and not options.master:
 
@@ -320,10 +324,10 @@ def main():
 
     if options.headless:
         # headless mode
-        if options.test_clients[0] != 'all':
-            runner.user_class_test_selection = [user_classes[x] for x in options.test_clients]
-        if options.test_clients[0] == 'all':
-            runner.user_class_test_selection = list(user_classes.values())
+        # if options.test_clients[0] != 'all':
+        #     runner.user_class_test_selection = [user_classes[x] for x in options.test_clients]
+        # if options.test_clients[0] == 'all':
+        #     runner.user_class_test_selection = list(user_classes.values())
         if options.master:
             # wait for worker nodes to connect
             while len(runner.clients.ready) < options.expect_workers:

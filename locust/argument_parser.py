@@ -171,13 +171,13 @@ def setup_parser_arguments(parser):
         dest="list_commands",
         help="Show list of possible User classes and exit",
     )
-    parser.add_argument(
-        "-c",
-        "--test-clients",
-        default="all",
-        type=str,
-        help="Select the test clients to run from the locustfile. When not specified with --headless, all clients run. Pass as quote-enclosed, comma-separated list: i.e. -c 'BasicUser, ElevatedPermissionsUser, AnonymousUser'",
-    )
+    # parser.add_argument(
+    #     "-c",
+    #     "--test-clients",
+    #     default="all",
+    #     type=str,
+    #     help="Select the test clients to run from the locustfile. When not specified with --headless, all clients run. Pass as quote-enclosed, comma-separated list: i.e. -c 'BasicUser, ElevatedPermissionsUser, AnonymousUser'",
+    # )
 
     web_ui_group = parser.add_argument_group("Web UI options")
     web_ui_group.add_argument(
@@ -451,7 +451,7 @@ def list_from_args(user_clients_str):
 def parse_options(args=None):
     parser = get_parser()
     parsed_opts = parser.parse_args(args=args)
-    parsed_opts.test_clients = list_from_args(parsed_opts.test_clients)
+    # parsed_opts.test_clients = list_from_args(parsed_opts.test_clients)
     print("Parsed opts: ")
     print(parsed_opts)
     print()
