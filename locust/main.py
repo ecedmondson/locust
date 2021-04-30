@@ -127,9 +127,6 @@ def main():
 
     # import the locustfile
     docstring, user_classes, shape_class = load_locustfile(locustfile)
-    print("user classes: ")
-    print(user_classes)
-    print()
 
     # parse all command line options
     options = parse_options()
@@ -137,10 +134,6 @@ def main():
 
     if options.headful:
         options.headless = False
-
-    # if options.headless:
-    #     if not validate_user_test_client_input(options.test_clients, user_classes):
-    #         sys.exit(1)
 
     if options.slave or options.expect_slaves:
         sys.stderr.write("The --slave/--expect-slaves parameters have been renamed --worker/--expect-workers\n")
@@ -172,6 +165,26 @@ def main():
         for name in user_classes:
             print("    " + name)
         sys.exit(0)
+
+    if not user_classes:
+        logger.error("No User class found!")
+        sys.exit(1)
+
+    # Preserve User Classes
+    preserved_user_classes = user_classes
+
+    # make sure specified User exists
+    if options.user_classes:
+        missing = set(options.user_classes) - set(user_classes.keys())
+        if missing:
+            logger.error("Unknown User(s): %s\n" % (", ".join(missing)))
+            sys.exit(1)
+        else:
+            names = set(options.user_classes) & set(user_classes.keys())
+            user_classes = [user_classes[n] for n in names]
+    else:
+        # list() call is needed to consume the dict_view object in Python 3
+        user_classes = list(user_classes.values())
 
     if os.name != "nt" and not options.master:
 
@@ -238,26 +251,14 @@ def main():
     else:
         runner = environment.create_local_runner()
 
-    if not user_classes:
-        logger.error("No User class found!")
-        sys.exit(1)
-
-    # make sure specified User exists
+    # Try to set user_class_test_selection to match web ui changes
+    # user_classes set on options in cases where running headless
     if options.user_classes:
-        missing = set(options.user_classes) - set(user_classes.keys())
-        if missing:
-            logger.error("Unknown User(s): %s\n" % (", ".join(missing)))
-            sys.exit(1)
-        else:
-            names = set(options.user_classes) & set(user_classes.keys())
-            selected_user_classes = [user_classes[n] for n in names]
-            user_classes = selected_user_classes
-            runner.user_class_test_selection = selected_user_classes
+        # bad input already validated in argparsing. do not repeat here.
+        names = set(options.user_classes) & set(user_classes.keys())
+        runner.user_class_test_selection = [user_classes[n] for n in names]
     else:
-        # list() call is needed to consume the dict_view object in Python 3
-        all_user_classes = list(user_classes.values())
-        user_classes = all_user_classes
-        runner.user_class_test_selection = all_user_classes
+        runner.user_class_test_selection = list(user_classes.values())
 
 
     # main_greenlet is pointing to runners.greenlet by default, it will point the web greenlet later if in web mode

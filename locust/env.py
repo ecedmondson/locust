@@ -190,4 +190,6 @@ class Environment:
             self.exclude_tags = set(self.exclude_tags)
 
         for user_class in self.user_classes:
+            print("all user classes"):
+            print(self.user_classes)
             filter_tasks_by_tags(user_class, self.tags, self.exclude_tags)

@@ -98,8 +98,6 @@ def get_tasks_from_base_classes(bases, class_dict):
     Function used by both TaskSetMeta and UserMeta for collecting all declared tasks
     on the TaskSet/User class and all its base classes
     """
-    print(bases)
-    print(class_dict)
     new_tasks = []
     for base in bases:
         if hasattr(base, "tasks") and base.tasks:
@@ -131,7 +129,9 @@ def filter_tasks_by_tags(task_holder, tags=None, exclude_tags=None, checked=None
     Function used by Environment to recursively remove any tasks/TaskSets from a TaskSet/User that
     shouldn't be executed according to the tag options
     """
-
+    print("filter func")
+    print(task_holder)
+    print()
     new_tasks = []
     if checked is None:
         checked = {}
