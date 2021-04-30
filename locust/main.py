@@ -138,9 +138,9 @@ def main():
     if options.headful:
         options.headless = False
 
-    if options.headless:
-        if not validate_user_test_client_input(options.test_clients, user_classes):
-            sys.exit(1)
+    # if options.headless:
+    #     if not validate_user_test_client_input(options.test_clients, user_classes):
+    #         sys.exit(1)
 
     if options.slave or options.expect_slaves:
         sys.stderr.write("The --slave/--expect-slaves parameters have been renamed --worker/--expect-workers\n")
