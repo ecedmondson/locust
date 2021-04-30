@@ -98,6 +98,8 @@ def get_tasks_from_base_classes(bases, class_dict):
     Function used by both TaskSetMeta and UserMeta for collecting all declared tasks
     on the TaskSet/User class and all its base classes
     """
+    print(bases)
+    print(class_dict)
     new_tasks = []
     for base in bases:
         if hasattr(base, "tasks") and base.tasks:
