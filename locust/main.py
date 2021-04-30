@@ -173,27 +173,6 @@ def main():
             print("    " + name)
         sys.exit(0)
 
-    if not user_classes:
-        logger.error("No User class found!")
-        sys.exit(1)
-
-    # make sure specified User exists
-    if options.user_classes:
-        missing = set(options.user_classes) - set(user_classes.keys())
-        if missing:
-            logger.error("Unknown User(s): %s\n" % (", ".join(missing)))
-            sys.exit(1)
-        else:
-            names = set(options.user_classes) & set(user_classes.keys())
-            selected_user_classes = [user_classes[n] for n in names]
-            user_classes = selected_user_classes
-            runner.user_class_test_selection = selected_user_classes
-    else:
-        # list() call is needed to consume the dict_view object in Python 3
-        all_user_classes = list(user_classes.values())
-        user_classes = all_user_classes
-        runner.user_class_test_selection = all_user_classes
-
     if os.name != "nt" and not options.master:
 
         try:
@@ -258,6 +237,28 @@ def main():
             sys.exit(-1)
     else:
         runner = environment.create_local_runner()
+
+    if not user_classes:
+        logger.error("No User class found!")
+        sys.exit(1)
+
+    # make sure specified User exists
+    if options.user_classes:
+        missing = set(options.user_classes) - set(user_classes.keys())
+        if missing:
+            logger.error("Unknown User(s): %s\n" % (", ".join(missing)))
+            sys.exit(1)
+        else:
+            names = set(options.user_classes) & set(user_classes.keys())
+            selected_user_classes = [user_classes[n] for n in names]
+            user_classes = selected_user_classes
+            runner.user_class_test_selection = selected_user_classes
+    else:
+        # list() call is needed to consume the dict_view object in Python 3
+        all_user_classes = list(user_classes.values())
+        user_classes = all_user_classes
+        runner.user_class_test_selection = all_user_classes
+
 
     # main_greenlet is pointing to runners.greenlet by default, it will point the web greenlet later if in web mode
     main_greenlet = runner.greenlet
