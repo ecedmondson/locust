@@ -187,10 +187,51 @@ table.stats {
   padding-left: 10px;
   padding-right: 10px; }
 
+.title {
+  font-size: 16px;
+  font-weight: bold;
+  padding-top: .5em;
+}
+
+.specify-test {
+  color: #EDDD75;
+  max-width: 94%;
+  min-width: 89%;
+}
+
+.test-input {
+  max-width: 95%;
+  min-width: 88%;
+}
+
+.non-title {
+  font-size: 12px;
+  font-weight: italics;
+}
+
+.add-test-button {
+  padding-top: .3em;
+}
+
+.test_selection_artificial_list {
+  font-size: 12px;
+  font-weight: normal;
+  color: #0ceb3c;
+}
+
+.user-radio-container {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  justify-content: flex-start;
+  align-items: center;
+
+}
+
 .dialogs {
   position: relative; }
   .dialogs .dialog {
-    width: 398px;
+    width: 415px;
     position: absolute;
     left: 50%;
     top: 60px;

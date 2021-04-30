@@ -34,6 +34,42 @@ greenlet_exception_handler = greenlet_exception_logger(logger)
 DEFAULT_CACHE_TIME = 2.0
 
 
+def parse_user_class_dict_from_environment(user_classes):
+    # eventually change name by adding in a test name property on test clients
+    # putting it in now as separate name and value to remind myself to do it/
+    # somewhat make it more easily future proof
+    return [{"value": x.select_value, "class": x, "client_name": x.select_name} for x in user_classes]
+
+
+def get_user_class_from_select_value(test_client_value, user_classes_list):
+    return list(filter(lambda x: x["value"] == test_client_value, user_classes_list))[0]["class"]
+
+
+def parse_data(form, user_classes):
+    data = {}
+    test_names = [x.strip() for x in form["tests-selected-hidden"].split(",")]
+    data["selected_test_name_class_dict"] = {
+        test_name: test_dict["class"]
+        for test_name in test_names
+        for test_dict in user_classes
+        if test_dict["client_name"] == test_name
+    }
+    data["spawn_rate"] = int(form["spawn_rate"])
+    if form["select_user_count"] == "randomize":
+        data["method"] = "randomize"
+        data["total_users"] = int(form["user_count"])
+    if form["select_user_count"] == "specify":
+        data["method"] = "specify"
+        data["user_counts"] = {"total": 0, "per_user": {}}
+        for k, v in form.items():
+            per_user_list = data["user_counts"]["per_user"]
+            total = data["user_counts"]["total"]
+            if not k.startswith("select_user_") and k.endswith("_user_count"):
+                total += int(v)
+                per_user_list[k] = int(v)
+    return data
+
+
 class WebUI:
     """
     Sets up and runs a Flask web app that can start and stop load tests using the
@@ -126,13 +162,12 @@ class WebUI:
         @app.route("/")
         @self.auth_required_if_enabled
         def index():
-            print(dir(environment.runner))
-            print(environment.runner.context)
-            print(dir(environment.runner.context))
             if not environment.runner:
                 return make_response("Error: Locust Environment does not have any runner", 500)
             self.update_template_args()
-            return render_template("index.html", **self.template_args)
+            user_class_args = parse_user_class_dict_from_environment(environment.runner.user_classes)
+            all_template_args = {**self.template_args, "user_classes": user_class_args}
+            return render_template("index.html", **all_template_args)
 
         @app.route("/emily")
         @self.auth_required_if_enabled
@@ -143,8 +178,6 @@ class WebUI:
         @self.auth_required_if_enabled
         def swarm():
             assert request.method == "POST"
-            print(request.form)
-            print(dir(environment.runner))
             if request.form.get("host"):
                 # Replace < > to guard against XSS
                 environment.host = str(request.form["host"]).replace("<", "").replace(">", "")
@@ -154,10 +187,12 @@ class WebUI:
                 return jsonify(
                     {"success": True, "message": "Swarming started using shape class", "host": environment.host}
                 )
-            user_count = int(request.form["user_count"])
-            spawn_rate = float(request.form["spawn_rate"])
+            user_classes = parse_user_class_dict_from_environment(environment.runner.user_classes)
+            data = parse_data(request.form, user_classes)
+            environment.runner.user_class_test_selection = list(data['selected_test_name_class_dict'].values())
+            environment.runner.parse_form_start_test(data)
 
-            environment.runner.start(user_count, spawn_rate)
+            # environment.runner.start(user_count, spawn_rate)  # , specify_user_count=specify_user_count)
             return jsonify({"success": True, "message": "Swarming started", "host": environment.host})
 
         @app.route("/stop")

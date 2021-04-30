@@ -115,6 +115,10 @@ def create_environment(user_classes, options, events=None, shape_class=None):
         parsed_options=options,
     )
 
+def validate_user_test_client_input(test_clients, locustfile_users):
+    if len(test_clients) == 1 and test_clients[0] == 'all':
+        return True
+    return all([client in locustfile_users.keys() for client in test_clients])
 
 def main():
     # find specified locustfile and make sure it exists, using a very simplified
@@ -126,6 +130,7 @@ def main():
 
     # parse all command line options
     options = parse_options()
+
 
     if options.headful:
         options.headless = False
@@ -164,6 +169,9 @@ def main():
     if not user_classes:
         logger.error("No User class found!")
         sys.exit(1)
+
+    # Preserve User Classes
+    preserved_user_classes = user_classes
 
     # make sure specified User exists
     if options.user_classes:
@@ -243,6 +251,19 @@ def main():
     else:
         runner = environment.create_local_runner()
 
+    # Try to set user_class_test_selection to match web ui changes
+    # user_classes set on options in cases where running headless
+    print("preservation")
+    print(preserved_user_classes)
+    print()
+    if options.user_classes:
+        # bad input already validated in argparsing. do not repeat here.
+        names = set(options.user_classes) & set(preserved_user_classes.keys())
+        runner.user_class_test_selection = [preserved_user_classes[n] for n in names]
+    else:
+        runner.user_class_test_selection = list(preserved_user_classes.values())
+
+
     # main_greenlet is pointing to runners.greenlet by default, it will point the web greenlet later if in web mode
     main_greenlet = runner.greenlet
 
@@ -308,6 +329,10 @@ def main():
 
     if options.headless:
         # headless mode
+        # if options.test_clients[0] != 'all':
+        #     runner.user_class_test_selection = [user_classes[x] for x in options.test_clients]
+        # if options.test_clients[0] == 'all':
+        #     runner.user_class_test_selection = list(user_classes.values())
         if options.master:
             # wait for worker nodes to connect
             while len(runner.clients.ready) < options.expect_workers:

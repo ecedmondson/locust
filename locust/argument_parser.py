@@ -436,6 +436,10 @@ def get_parser(default_config_files=DEFAULT_CONFIG_FILES):
     locust.events.init_command_line_parser.fire(parser=parser)
     return parser
 
+def list_from_args(user_clients_str):
+    if user_clients_str == "all":
+        return["all"]
+    return [x.strip() for x in user_clients_str.split(",")]
 
 def parse_options(args=None):
     parser = get_parser()

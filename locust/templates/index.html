@@ -4,6 +4,7 @@
     <title>Locust</title>
     <link rel="stylesheet" type="text/css" href="./static/css/application.css?v={{ version }}" media="screen">
     <link rel="shortcut icon" href="./static/img/favicon.ico" type="image/x-icon"/>
+    <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css'>
 </head>
 <body class="{{state}}">
     <div class="top">
@@ -59,21 +60,51 @@
                 <h2>Start new load test</h2>
                 <form action="./swarm" method="POST" id="swarm_form">
                     {% if is_shape %}
-                        <label for="user_count">Number of total users to simulate</label>
+                        <label for="user_count" class="title">Number of total users to simulate</label>
                         <input type="text" name="user_count" id="user_count" class="val_disabled" value="-" disabled="disabled" title="Disabled for tests using LoadTestShape class"/><br>
-                        <label for="test_client">Test client to user</label>
+                        <label for="test_client" class="title">Test client to user</label>
                         <input type="text" name="test_client" id="test_client" class="val_disabled" value="-" disabled="disabled" title="Disabled for tests useing LoadTestShape class"/><br>
                         <input type="hidden" name="user_count" id="user_count" value="0"/><br>
                         <label for="spawn_rate">Hatch rate <span style="color:#8a8a8a;">(users spawned/second)</span></label>
                         <input type="text" name="spawn_rate" id="spawn_rate" class="val_disabled" value="-" disabled="disabled" title="Disabled for tests using LoadTestShape class"/><br>
                         <input type="hidden" name="spawn_rate" id="spawn_rate" value="0"/><br>
                     {% else %}
-                        <label for="user_count">Number of total users to simulate</label>
-                        <input type="text" name="user_count" id="user_count" class="val" value="{{ num_users or "" }}"/><br>
-                        <label for="test_client">Number of total users to simulate</label>
-                        <input type="text" name="test_client" id="test_client" class="val" value="{{ test_client or "" }}"/><br>
-                        <label for="spawn_rate">Spawn rate <span style="color:#8a8a8a;">(users spawned/second)</span></label>
-                        <input type="text" name="spawn_rate" id="spawn_rate" class="val" value="{{ spawn_rate or "" }}"/><br>
+                        <label for="test_client" class="title">Test Client to Use: </label>
+                        <select id="test_client" name="test_client" class="test-input">
+                            {% for user in user_classes %}
+                            <option value="{{ user.value }}" class="val">{{ user.client_name }}</option>
+                            {% endfor %}
+                        </select><br>
+                        <input type="button" name="add_test_client" id="add_test_client_button" value="Add Test" class="add-test-button"><br>
+                        <div class="val title" id="tests_selected_title">
+                            Tests Selected: 
+                            <p class="non-title test-input" id="tests_selected_text_area">None Selected</p>
+                        </div>
+                        <input class="hidden-select" type="hidden" id="tests-selected-hidden" name="tests-selected-hidden" value="">
+                        <div class="val title" id="specify_or_randomize_user_count">
+                            Specify Number of Users Per Test Client or Let Locust Randomize?
+                        </div>
+                        <div class="user-radio-container">
+                            <input type="radio" name="select_user_count" id="randomize_user_count" value="randomize" class="radio-test-input" checked>
+                            <label for="select_user_count" class="non-title"> Randomize User Count</label>
+                        </div>
+                        <div class="user-radio-container">
+                            <input type="radio" name="select_user_count" id="specify_user_count" value="specify" class="radio-test-input">
+                            <label for="specify_user_count" class="non-title"> Specify User Count per Test Client</label>
+                        </div>
+                        <div id="user-num-input-container">
+                            <label for="user_count" class="title specify-test">Total Number Users to Simulate: </label>
+                            <input type="text" name="user_count" id="user_count" class="val test-input" value="{{ num_users or "" }}"/><br>
+                        </div>
+<!--                         <div id="user-num-input-container-delete-later-this-version-only">
+                            <p class="title">Specify Number of Users to Simulate: </p>
+                            <label for="event_details_get_user_count" class="title">Number of 'Event Details GET' Users: </label>
+                            <input type="text" name="event_details_get_user_count" id="event_details_get_user_count" class="val test-input" value="{{ num_users or "" }}"/><br>
+                            <label for="live_booth_attendee_user_count" class="title">Number of 'Live Booth Attendee' Users: </label>
+                            <input type="text" name="live_booth_attendee_user_count" id="live_booth_attendee_user_count" class="val test-input" value="{{ num_users or "" }}"/><br>
+                        </div> -->
+                        <label for="spawn_rate" class="title">Spawn Rate: <span style="color:#8a8a8a;">(users spawned/second)</span></label>
+                        <input type="text" name="spawn_rate" id="spawn_rate" class="val test-input" value="{{ spawn_rate or "" }}"/><br>
                     {% endif %}
                     <label for="host">
                         Host <span style="color:#8a8a8a;">(e.g. http://www.example.com)</span>
@@ -311,6 +342,7 @@
         {% include 'stats_data.html' %}
     </script>
     <script type="text/javascript" src="./static/chart.js?v={{ version }}"></script>
+    <script type="text/javascript" src="./static/index-page.js"></script>
     <script type="text/javascript" src="./static/locust.js?v={{ version }}"></script>
     {% block extended_script %}
     {% endblock extended_script %}
